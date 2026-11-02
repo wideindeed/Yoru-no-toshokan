@@ -260,6 +260,7 @@ body.spoilers .spoiler-tag { display: inline-block; }
   .vn { grid-template-columns: 1fr; padding: 20px 16px; }
   .vn-side { max-width: 280px; }
   .tagline { display: none; }
+  .about-link { padding: 5px 10px; font-size: 13px; gap: 7px; }
 }
 
 /* screenshot carousel */
@@ -284,8 +285,31 @@ body.spoilers .spoiler-tag { display: inline-block; }
 .cover.shot { cursor: zoom-in; }
 
 /* ------------------------------------------------------------ about page */
-.about-link { margin-left: auto; color: var(--muted); font: italic 14px var(--serif); text-decoration: none; }
-.about-link:hover { color: var(--amber); }
+/* a small lantern hanging in the corner: breathes slowly, lights up on hover */
+.about-link {
+  margin-left: auto; align-self: center; display: inline-flex; align-items: center; gap: 9px;
+  padding: 7px 16px; border: 1px solid var(--amber-dim); border-radius: 2px;
+  color: var(--amber); font: 15px var(--serif); text-decoration: none; letter-spacing: .02em;
+  background: rgba(227, 168, 87, .05);
+  animation: lantern 4.5s ease-in-out infinite;
+  transition: background .2s, color .2s, border-color .2s;
+}
+.about-link .lamp {
+  width: 7px; height: 7px; border-radius: 50%; background: var(--amber);
+  box-shadow: 0 0 6px 1px rgba(227, 168, 87, .8);
+  animation: flicker 3.2s steps(1) infinite;
+}
+.about-link:hover { animation: none; background: rgba(227, 168, 87, .14); border-color: var(--amber); color: var(--paper);
+  box-shadow: 0 0 18px -2px rgba(227, 168, 87, .45); }
+@keyframes lantern {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(227, 168, 87, 0); }
+  50%      { box-shadow: 0 0 16px -3px rgba(227, 168, 87, .35); }
+}
+@keyframes flicker {                      /* an old bulb: mostly steady, the odd dip */
+  0%, 100% { opacity: 1; }
+  71% { opacity: .55; } 73% { opacity: 1; } 76% { opacity: .7; } 78% { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) { .about-link, .about-link .lamp { animation: none; } }
 .about { max-width: 760px; margin: 0 auto; padding: 30px 32px 70px; font: 16px/1.7 var(--serif); color: #ddd5c5; }
 .about a { color: var(--amber); }
 .about h2 { font: 500 20px var(--serif); color: var(--paper); margin: 40px 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
