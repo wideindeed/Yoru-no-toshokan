@@ -260,7 +260,6 @@ body.spoilers .spoiler-tag { display: inline-block; }
   .vn { grid-template-columns: 1fr; padding: 20px 16px; }
   .vn-side { max-width: 280px; }
   .tagline { display: none; }
-  .about-link { padding: 5px 10px; font-size: 13px; gap: 7px; }
 }
 
 /* screenshot carousel */
@@ -285,31 +284,59 @@ body.spoilers .spoiler-tag { display: inline-block; }
 .cover.shot { cursor: zoom-in; }
 
 /* ------------------------------------------------------------ about page */
-/* a small lantern hanging in the corner: breathes slowly, lights up on hover */
-.about-link {
-  margin-left: auto; align-self: center; display: inline-flex; align-items: center; gap: 9px;
-  padding: 7px 16px; border: 1px solid var(--amber-dim); border-radius: 2px;
-  color: var(--amber); font: 15px var(--serif); text-decoration: none; letter-spacing: .02em;
-  background: rgba(227, 168, 87, .05);
-  animation: lantern 4.5s ease-in-out infinite;
-  transition: background .2s, color .2s, border-color .2s;
+/* a red paper lantern (chōchin) hangs from the top of the header and lights the About button */
+@media (min-width: 761px) { header:not(.slim) { padding-right: 190px; } }
+.about-hang {
+  position: absolute; top: 0; right: 32px; z-index: 6;
+  display: flex; flex-direction: column; align-items: center; text-decoration: none;
 }
-.about-link .lamp {
-  width: 7px; height: 7px; border-radius: 50%; background: var(--amber);
-  box-shadow: 0 0 6px 1px rgba(227, 168, 87, .8);
-  animation: flicker 3.2s steps(1) infinite;
+.lamp-wrap { display: flex; flex-direction: column; align-items: center; transform-origin: 50% 0;
+  animation: sway 7s ease-in-out infinite; }
+.cord { width: 1px; height: 10px; background: #4a4038; }
+.chochin {
+  position: relative; width: 34px; height: 42px; border-radius: 48% / 50%;
+  display: grid; place-items: center;
+  background: radial-gradient(ellipse at 50% 42%, #ffd79a 0%, #ee8a4a 30%, #c4472f 66%, #6a1f17 100%);
+  animation: glow 4.3s ease-in-out infinite;
 }
-.about-link:hover { animation: none; background: rgba(227, 168, 87, .14); border-color: var(--amber); color: var(--paper);
-  box-shadow: 0 0 18px -2px rgba(227, 168, 87, .45); }
-@keyframes lantern {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(227, 168, 87, 0); }
-  50%      { box-shadow: 0 0 16px -3px rgba(227, 168, 87, .35); }
+.chochin::after {                         /* the bamboo ribs under the paper */
+  content: ""; position: absolute; inset: 0; border-radius: inherit;
+  background: repeating-linear-gradient(180deg, transparent 0 5px, rgba(80, 18, 10, .30) 5px 6px);
 }
-@keyframes flicker {                      /* an old bulb: mostly steady, the odd dip */
-  0%, 100% { opacity: 1; }
-  71% { opacity: .55; } 73% { opacity: 1; } 76% { opacity: .7; } 78% { opacity: 1; }
+.chochin::before {                        /* black lacquer caps, top and (via the shadow) bottom */
+  content: ""; position: absolute; top: -3px; left: 9px; right: 9px; height: 5px; z-index: 2;
+  background: #1d1714; border-radius: 1px; box-shadow: 0 43px 0 #1d1714;
 }
-@media (prefers-reduced-motion: reduce) { .about-link, .about-link .lamp { animation: none; } }
+.chochin .ji { position: relative; z-index: 1; font: 600 16px/1 var(--jp); color: rgba(55, 12, 6, .78); }
+.about-btn {
+  margin-top: 8px; padding: 7px 16px; border-radius: 2px;
+  border: 1px solid rgba(214, 112, 64, .45); border-top-color: rgba(255, 176, 112, .85);
+  color: #f0b77a; font: 15px var(--serif); letter-spacing: .02em; white-space: nowrap;
+  background: radial-gradient(ellipse 90% 140% at 50% -30%, rgba(238, 138, 74, .30), rgba(238, 138, 74, .03) 70%);
+  animation: lit 4.3s ease-in-out infinite;
+  transition: color .2s, background .2s, border-color .2s;
+}
+.about-hang:hover .about-btn { color: var(--paper); border-color: rgba(255, 176, 112, .8);
+  background: radial-gradient(ellipse 90% 140% at 50% -30%, rgba(238, 138, 74, .45), rgba(238, 138, 74, .08) 75%); }
+.about-hang:hover .chochin { filter: brightness(1.15); }
+@keyframes sway { 0%, 100% { transform: rotate(-2.5deg); } 50% { transform: rotate(2.5deg); } }
+@keyframes glow {                         /* candle inside: steady, with the odd flutter */
+  0%, 100% { box-shadow: 0 0 14px 3px rgba(238, 138, 74, .45), 0 0 44px 10px rgba(238, 138, 74, .14); filter: brightness(1); }
+  47% { box-shadow: 0 0 14px 3px rgba(238, 138, 74, .45), 0 0 44px 10px rgba(238, 138, 74, .14); filter: brightness(1); }
+  50% { box-shadow: 0 0 9px 2px rgba(238, 138, 74, .30), 0 0 30px 6px rgba(238, 138, 74, .08); filter: brightness(.82); }
+  54% { box-shadow: 0 0 16px 4px rgba(238, 138, 74, .50), 0 0 48px 12px rgba(238, 138, 74, .16); filter: brightness(1.05); }
+}
+@keyframes lit {                          /* the button catches the same flutter */
+  0%, 47%, 100% { box-shadow: 0 -8px 16px -10px rgba(238, 138, 74, .70); }
+  50% { box-shadow: 0 -8px 14px -10px rgba(238, 138, 74, .35); }
+  54% { box-shadow: 0 -8px 18px -9px rgba(238, 138, 74, .80); }
+}
+@media (prefers-reduced-motion: reduce) { .lamp-wrap, .chochin, .about-btn { animation: none; } }
+@media (max-width: 760px) {
+  .lamp-wrap { display: none; }
+  .about-hang { top: 18px; right: 16px; }
+  .about-btn { margin: 0; padding: 4px 10px; font-size: 13px; }
+}
 .about { max-width: 760px; margin: 0 auto; padding: 30px 32px 70px; font: 16px/1.7 var(--serif); color: #ddd5c5; }
 .about a { color: var(--amber); }
 .about h2 { font: 500 20px var(--serif); color: var(--paper); margin: 40px 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
