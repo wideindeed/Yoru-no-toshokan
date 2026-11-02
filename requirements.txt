@@ -1,0 +1,10 @@
+requests>=2.31
+rapidfuzz>=3.0
+PyYAML>=6.0
+Flask>=3.0
+pytest>=8.0
+
+# Optional (semantic tag matching, set use_embeddings: true in config.yaml).
+# For GPU, install torch first:
+#   pip install torch --index-url https://download.pytorch.org/whl/cu124
+# sentence-transformers>=2.7

@@ -1,0 +1,50 @@
+# Yoru no Toshokan settings
+
+# --- Matching ---
+fuzzy_threshold: 85          # rapidfuzz score (0-100) needed to accept a fuzzy tag match
+use_embeddings: false        # optional MiniLM semantic matcher (needs sentence-transformers)
+embedding_threshold: 0.60    # cosine similarity needed for an embedding match
+                             # (MiniLM guesses are loose; matches show as "embedding" in --explain)
+fuzzy_min_sort_ratio: 80     # guard: token_set_ratio gives 100 for any word subset
+                             # ("horror" vs "Body Horror"), so also require this
+                             # token_sort_ratio before accepting a fuzzy hit
+
+# --- Quality words ---
+high_rating_min: 70          # "highly rated" -> rating >= this (VNDB scale 10-100)
+popular_min_votes: 500       # "popular" -> votecount >= this
+
+# --- Tag filters ---
+max_spoiler: 0               # 0 = no spoiler tags, 1 = minor, 2 = major
+min_tag_level: 1.2           # ignore weakly-voted tags (0-3)
+
+# --- Results ---
+results_per_page: 24
+default_sort: rating         # rating | votecount | released
+
+# --- Cover blurring (image.sexual / image.violence are 0..2 averages) ---
+blur_sexual_level: 1         # blur covers with image.sexual >= this
+blur_violence_level: 2       # blur covers with image.violence >= this
+
+# --- Caching ---
+cache_ttl_hours: 24
+tag_refresh_days: 7
+
+# --- Web UI ---
+port: 5050                   # 127.0.0.1 only
+
+# --- API ---
+api_url: https://api.vndb.org/kana
+user_agent: yoru-no-toshokan/1.0 (+https://github.com/wideindeed/Yoru-no-toshokan)
+min_request_interval: 1.5    # seconds between live requests (200 req / 5 min limit)
+request_timeout: 15
+max_retries: 5
+
+# --- Optional LLM rewriter (Ollama) ---
+# Rewrites conversational input into keywords for the rule parser; the parser
+# still decides every filter. Falls back to the rule parser if Ollama is down.
+use_llm: false
+llm_backend: ollama
+llm_url: http://127.0.0.1:11434
+llm_model: qwen2.5:7b-instruct  # any Ollama chat model; 7-8B Q4 fits 8 GB VRAM
+llm_timeout: 60              # seconds (the first call loads the model into VRAM)
+llm_repair: true             # one extra round to map leftover phrases to real tag names

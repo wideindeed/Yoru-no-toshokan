@@ -1,0 +1,142 @@
+# =====================================================================
+#  Yoru no Toshokan — synonym dictionary  (edit freely)
+# =====================================================================
+#
+# This file is checked FIRST for every phrase, before the built-in rules
+# and before fuzzy tag matching. Keys are matched case-insensitively
+# against the whole phrase (and its singular / filler-stripped forms), and
+# are also offered to the fuzzy matcher, so small typos still hit them.
+#
+# Each entry maps a phrase to ONE OR MORE of these targets:
+#
+#   tag: "Tag Name"            # one VNDB tag (name or alias, as on vndb.org)
+#   tag: ["Tag A", "Tag B"]    # several tags, ALL required
+#   any_tags: ["A", "B"]       # several tags, ANY one is enough (OR)
+#   exclude_tags: ["A", "B"]   # tags that must NOT be present
+#   content: suggestive        # a content level defined below
+#   engine: "RPG Maker"        # exact VNDB engine string (see docs/api_notes.md)
+#   lang: en                   # VNDB language code(s), e.g. en / [en, ja]
+#   platform: win              # VNDB platform code(s), e.g. win / [and, ios]
+#   min_level: 2.0             # optional: stricter tag level for this entry (0-3)
+#
+# Tag names are resolved to IDs at startup. If a name no longer exists on
+# VNDB you get a warning in the console and that entry is skipped.
+#
+# A phrase prefixed with "no"/"without"/"not"/"exclude" is automatically
+# negated, so you do NOT need separate "no X" entries — but you can add
+# one when the negated meaning is special (see "no sexual content").
+# =====================================================================
+
+phrases:
+  # --- protagonist ---------------------------------------------------
+  female lead:              { tag: "Female Protagonist" }
+  female lead heroine:      { tag: "Female Protagonist" }
+  # VNDB's own alias "Strong Heroine" points at "Muscular Heroine"; in plain
+  # English people usually mean a strong-willed female lead.
+  strong heroine:           { tag: "Strong Female Protagonist" }
+  strong female lead:       { tag: "Strong Female Protagonist" }
+  strong female mc:         { tag: "Strong Female Protagonist" }
+  female protag:            { tag: "Female Protagonist" }
+  female mc:                { tag: "Female Protagonist" }
+  heroine protagonist:      { tag: "Female Protagonist" }
+  girl protagonist:         { tag: "Female Protagonist" }
+  male lead:                { tag: "Male Protagonist" }
+  male mc:                  { tag: "Male Protagonist" }
+  male protag:              { tag: "Male Protagonist" }
+
+  # --- structure -----------------------------------------------------
+  multiple endings:         { tag: "Multiple Endings" }
+  one ending:               { tag: "Single Ending" }
+  single ending:            { tag: "Single Ending" }
+  linear:                   { tag: "Single Ending" }
+  linear story:             { tag: "Single Ending" }
+  many endings:             { tag: "Multiple Endings" }
+  branching:                { tag: "Multiple Endings" }
+  kinetic novel:            { tag: "No Choices" }
+  no choices:               { tag: "No Choices" }
+
+  # --- setting / genre -----------------------------------------------
+  fantasy:                  { tag: "Fantasy" }
+  fantasy setting:          { tag: "Fantasy" }
+  fantasy world:            { tag: "Fantasy" }
+  sci-fi:                   { tag: "Science Fiction" }
+  scifi:                    { tag: "Science Fiction" }
+  time loops:               { tag: "Time Loop" }
+  yuri:                     { tag: "Girl x Girl Romance" }
+  bl:                       { tag: "Boy x Boy Romance" }
+  otome:                    { tag: "Otome Game" }
+
+  # --- engines (the built-in rules already cover these; examples only) ---
+  rpgmaker:                 { engine: "RPG Maker" }
+  wolfrpg:                  { engine: "Wolf RPG Editor" }
+
+  # --- content level -------------------------------------------------
+  suggestive:               { content: suggestive }
+  suggestive themes:        { content: suggestive }
+  suggestive content:       { content: suggestive }
+  ecchi:                    { content: suggestive }
+  fanservice:               { content: suggestive }
+  lewd:                     { content: suggestive }
+
+  explicit:                 { content: explicit }
+  nsfw:                     { content: explicit }
+  h-game:                   { content: explicit }
+  hentai:                   { content: explicit }
+  adult:                    { content: explicit }
+  18+:                      { content: explicit }
+
+  all ages:                 { content: all_ages }
+  sfw:                      { content: all_ages }
+  safe for work:            { content: all_ages }
+  family friendly:          { content: all_ages }
+  no sexual content:        { content: all_ages }
+  non-eroge:                { content: all_ages }
+
+# ---------------------------------------------------------------------
+# Content levels. VNDB has no single "content rating" field, so each level
+# is a bundle of tags. Tune these to taste:
+#   all:          every tag required
+#   any:          at least one of these tags
+#   exclude_tags: none of these tags
+# ---------------------------------------------------------------------
+content_levels:
+  # Teasing / implied but not explicit. A VN needs at least ONE of these.
+  # Add "Sexual Content" to `any` if you also want full eroge included.
+  suggestive:
+    any:
+      - "Sexual Innuendo"            # g1274
+      - "Panchira"                   # g1378
+      - "Non-explicit Nudity Only"   # g3194
+      - "Low Sexual Content"         # g236
+
+  # Full sexual content (eroge).
+  explicit:
+    all:
+      - "Sexual Content"             # g23
+
+  # Uses VNDB's "No Sexual Content" tag (~15k VNs). For an even stricter
+  # filter, add  exclude_tags: ["Sexual Content"]
+  all_ages:
+    all:
+      - "No Sexual Content"          # g235
+
+# ---------------------------------------------------------------------
+# patterns: regular expressions (case-insensitive, matched as whole words
+# anywhere in a clause) for paraphrases a fixed phrase can't cover.
+# Same targets as `phrases`. Use single quotes so backslashes survive.
+# ---------------------------------------------------------------------
+patterns:
+  - pattern: '(?:main\s+character|protagonist|protag|main\s+lead|lead|mc|hero)(?:\s+(?:is|being|should\s+be|must\s+be|would\s+be|has\s+to\s+be))?(?:\s+an?)?\s+(?:girl|woman|female|lady|gal)'
+    tag: "Female Protagonist"
+  - pattern: '(?:play(?:ing)?|playing)\s+as\s+(?:an?\s+)?(?:girl|woman|female|lady)'
+    tag: "Female Protagonist"
+  - pattern: '(?:girl|woman|female)\s+(?:main\s+character|protagonist|protag|lead|mc)'
+    tag: "Female Protagonist"
+  - pattern: '(?:main\s+character|protagonist|protag|main\s+lead|lead|mc)(?:\s+(?:is|being|should\s+be|must\s+be|would\s+be|has\s+to\s+be))?(?:\s+an?)?\s+(?:boy|man|male|guy)'
+    tag: "Male Protagonist"
+  - pattern: '(?:play(?:ing)?)\s+as\s+(?:an?\s+)?(?:boy|man|male|guy)'
+    tag: "Male Protagonist"
+  - pattern: '(?:boy|man|male|guy)\s+(?:main\s+character|protagonist|protag|lead|mc)'
+    tag: "Male Protagonist"
+  - pattern: '(?:lots\s+of|many|several|different|multiple)\s+(?:possible\s+)?(?:endings|outcomes)'
+    tag: "Multiple Endings"

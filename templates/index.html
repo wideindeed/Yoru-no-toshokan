@@ -1,0 +1,75 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Yoru no Toshokan</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header>
+  <div class="brand">
+    <h1><a href="/">Yoru no Toshokan</a></h1>
+    <span class="sign" aria-hidden="true">夜</span>
+    <span class="tagline">visual novels, after hours</span>
+  </div>
+  <form id="search-form">
+    <input id="q" type="text" autocomplete="off" autofocus
+           placeholder="e.g. fantasy setting, english, RPG Maker, multiple endings, female lead">
+    <button type="submit">Search</button>
+  </form>
+  <div class="options">
+    <label>Sort
+      <select id="sort">
+        {% for s in ["rating", "votecount", "released", "title"] %}
+        <option value="{{ s }}" {% if s == default_sort %}selected{% endif %}>{{ s }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Match
+      <select id="mode">
+        <option value="all">all tags</option>
+        <option value="any">any tag (ranked)</option>
+      </select>
+    </label>
+    <label title="On: only games with sexual content (covers unblurred). Off: none of them."><input type="checkbox" id="mature"> Mature content</label>
+    <label title="Rewrite conversational text with the local Ollama model first">
+      <input type="checkbox" id="llm" {% if use_llm %}checked{% endif %}> LLM rewrite</label>
+  </div>
+  <details id="prefs-panel"><summary>Preferences</summary>
+    <div class="prefs">
+      <div><h3>Always exclude · Mature off</h3><div class="plist" id="ex-normal"></div>
+        <form class="padd" data-layer="normal"><input placeholder="tag, e.g. Otome Game"><button>Add</button></form></div>
+      <div><h3>Always exclude · Mature on</h3><div class="plist" id="ex-mature"></div>
+        <form class="padd" data-layer="mature"><input placeholder="tag, e.g. Rape"><button>Add</button></form></div>
+      <div><h3>Not interested</h3><div class="plist" id="hidden-list"></div></div>
+    </div>
+    <p id="prefs-msg" class="pmsg"></p>
+  </details>
+</header>
+
+<section id="understood" hidden>
+  <div id="rewritten-row" hidden>
+    Rewritten as: <input id="rewritten" type="text" title="Edit and press Enter to re-parse">
+    <span id="llm-note"></span>
+  </div>
+  <div>Understood as: <span id="chips"></span></div>
+  <div id="always-row" hidden>Always excluded: <span id="always"></span></div>
+  <details id="explain"><summary>how each phrase was read</summary><table id="report"></table></details>
+</section>
+
+<div id="welcome">
+  <p>Say what you're in the mood for, the way you'd say it out loud.</p>
+  <ul>
+    <li><button class="try">fantasy setting, female lead, multiple endings</button></li>
+    <li><button class="try">a slice of life story with one ending, in english</button></li>
+    <li><button class="try">vampires, made in RPG Maker, no horror, after 2015</button></li>
+  </ul>
+</div>
+<p id="status"></p>
+<main id="grid"></main>
+<div id="more-row"><button id="more" hidden>Load more</button></div>
+
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

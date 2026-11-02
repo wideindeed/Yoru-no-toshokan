@@ -1,0 +1,135 @@
+"""ParseResult -> Kana /vn filter JSON, plus result-card shaping."""
+from __future__ import annotations
+
+from parsing.model import Criterion, ParseResult
+
+VN_FIELDS = ", ".join([
+    "id", "title", "alttitle", "released", "rating", "votecount", "length",
+    "image.url", "image.thumbnail", "image.sexual", "image.violence",
+    "tags.id", "tags.name", "tags.rating", "tags.spoiler", "tags.category",
+    "developers.name",
+])
+SORTS = {"rating", "votecount", "released", "title"}
+_INVERT = {">=": "<", "<": ">=", ">": "<=", "<=": ">", "=": "!=", "!=": "="}
+
+
+def _and(parts: list):
+    parts = [p for p in parts if p]
+    return None if not parts else parts[0] if len(parts) == 1 else ["and", *parts]
+
+
+def _or(parts: list):
+    parts = [p for p in parts if p]
+    return None if not parts else parts[0] if len(parts) == 1 else ["or", *parts]
+
+
+def _tag(tid: str, c: Criterion, cfg: dict, op: str = "=") -> list:
+    if op == "!=":   # exclusions are strict: any vote strength, spoiler or not
+        return ["tag", "!=", [tid, 2, 0.0]]
+    lvl = c.min_level if c.min_level is not None else cfg["min_tag_level"]
+    return ["tag", op, [tid, int(cfg["max_spoiler"]), float(lvl)]]
+
+
+def criterion_filter(c: Criterion, cfg: dict):
+    """One criterion -> one filter expression (exclusion already applied)."""
+    ex = c.exclude
+    if c.kind == "tag":
+        return _tag(c.value, c, cfg, "!=" if ex else "=")
+    if c.kind == "tag_any":
+        if ex:   # none of them
+            return _and([_tag(t, c, cfg, "!=") for t in c.value])
+        return _or([_tag(t, c, cfg) for t in c.value])
+    if c.kind in ("lang", "platform"):
+        if ex:
+            return _and([[c.kind, "!=", v] for v in c.value])
+        return _or([[c.kind, "=", v] for v in c.value])
+    if c.kind == "engine":
+        return ["release", "!=" if ex else "=", ["engine", "=", c.value]]
+    if c.kind == "released":
+        if ex:   # NOT (a AND b) = (NOT a) OR (NOT b)
+            return _or([["released", _INVERT[op], d] for op, d in c.value])
+        return _and([["released", op, d] for op, d in c.value])
+    if c.kind in ("length", "rating", "votecount"):
+        op = c.op if c.kind == "length" else (c.op or ">=")
+        return [c.kind, _INVERT[op] if ex else op, c.value]
+    raise ValueError(f"unknown kind {c.kind}")
+
+
+SEXUAL_CONTENT, NO_SEXUAL_CONTENT = "g23", "g235"
+
+
+def content_in_query(crits: list[Criterion]) -> bool:
+    """True if the query itself sets a content level (explicit / suggestive / all ages),
+    which then takes precedence over the Mature toggle."""
+    for c in crits:
+        ids = c.value if c.kind == "tag_any" else [c.value] if c.kind == "tag" else []
+        if SEXUAL_CONTENT in ids or NO_SEXUAL_CONTENT in ids or c.label.startswith("Content:"):
+            return True
+    return False
+
+
+def mature_filter(mature: bool, cfg: dict) -> list:
+    """Mature on: only VNs tagged Sexual Content (or any child tag).
+    Off: none of them, at any spoiler level and any vote strength."""
+    if mature:
+        return ["tag", "=", [SEXUAL_CONTENT, 2, float(cfg["min_tag_level"])]]
+    return ["tag", "!=", [SEXUAL_CONTENT, 2, 0.0]]
+
+
+def build_filters(res: ParseResult | list[Criterion], cfg: dict, mode: str = "all",
+                  mature: bool | None = None):
+    """mode 'all': every criterion must hold.
+    mode 'any': positive tag criteria are OR'ed (re-rank locally); the rest still AND.
+    mature: True/False adds the Mature filter (unless the query sets a content level)."""
+    crits = res.criteria if isinstance(res, ParseResult) else res
+    extra = [mature_filter(mature, cfg)] if mature is not None and not content_in_query(crits) else []
+    if mode == "any":
+        pos_tags = [c for c in crits if c.kind in ("tag", "tag_any") and not c.exclude]
+        rest = [c for c in crits if c not in pos_tags]
+        return _and([_or([criterion_filter(c, cfg) for c in pos_tags]),
+                     *[criterion_filter(c, cfg) for c in rest], *extra])
+    return _and([criterion_filter(c, cfg) for c in crits] + extra)
+
+
+def wanted_tag_groups(crits: list[Criterion]) -> list[tuple[set[str], list[str]]]:
+    """Each positive tag criterion as (acceptable ids, lowercase names) for re-ranking.
+    Names let child tags count too: VNDB's tag filter matches "Vampire Heroine"
+    for "Vampire", but the VN only lists the child's id."""
+    out = []
+    for c in crits:
+        if c.exclude or c.kind not in ("tag", "tag_any"):
+            continue
+        ids = {c.value} if c.kind == "tag" else set(c.value)
+        names = [n.strip().lower() for n in c.label.split(" / ")] if c.kind == "tag" or "/" in c.label else []
+        out.append((ids, names))
+    return out
+
+
+def _hit(group, vn_tags: list[dict]) -> bool:
+    ids, names = group
+    return any(t["id"] in ids or any(n and n in (t.get("name") or "").lower() for n in names)
+               for t in vn_tags)
+
+
+def to_card(vn: dict, cfg: dict, groups: list[set[str]] = (), show_explicit: bool = False) -> dict:
+    tags = [t for t in vn.get("tags") or [] if t.get("spoiler", 0) == 0
+            and (t.get("category") == "cont" or (show_explicit and t.get("category") == "ero"))]
+    tags.sort(key=lambda t: -(t.get("rating") or 0))
+    img = vn.get("image") or {}
+    sexual, violence = img.get("sexual") or 0, img.get("violence") or 0
+    return {
+        "id": vn["id"],
+        "url": f"https://vndb.org/{vn['id']}",
+        "title": vn.get("title"),
+        "alttitle": vn.get("alttitle"),
+        "year": (vn.get("released") or "")[:4] or None,
+        "rating": round(vn["rating"] / 10, 2) if vn.get("rating") else None,
+        "votecount": vn.get("votecount"),
+        "developers": [d["name"] for d in vn.get("developers") or []][:2],
+        "tags": [t["name"] for t in tags[:5]],
+        "cover": img.get("thumbnail") or img.get("url"),
+        "cover_full": img.get("url"),
+        "blur": bool(img) and not show_explicit and (sexual >= cfg["blur_sexual_level"] or violence >= cfg["blur_violence_level"]),
+        "hits": sum(1 for g in groups if _hit(g, vn.get("tags") or [])),
+        "wanted": len(groups),
+    }
