@@ -31,7 +31,7 @@ it's free, and it needs no account.
 - **A Mature switch that means it.** Off: nothing with sexual content, at any
   level. On: only titles with sexual content. No in-between leaking through.
 - **Your own filters.** Keep a list of tags you never want to see, for example
-  "Boy x Boy Romance", separately for each mode. Hide individual titles you're
+  "Gore" or "Netorare", separately for each mode. Hide individual titles you're
   not interested in, and they stay gone.
 - **Bookmarkable searches.** Each search lives in the address bar, so you can
   save it or share it.
