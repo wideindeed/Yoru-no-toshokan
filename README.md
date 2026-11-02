@@ -187,8 +187,10 @@ python cli.py --refresh-tags         # re-download the tag list now
 
 ## Credits and license
 
-**Yoru no Toshokan is an unofficial fan project. It is not affiliated with or
-endorsed by VNDB.**
+**Yoru no Toshokan is a free, unofficial, non-commercial fan project. It is not
+affiliated with or endorsed by VNDB, or by any developer or publisher. I own
+nothing shown in it, and no money is made from it.** The app has an About page
+with a full disclaimer and FAQ.
 
 - Visual novel data comes from [vndb.org](https://vndb.org) and is available
   under the [Open Database License](https://vndb.org/d17#4). Thanks to the VNDB

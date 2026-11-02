@@ -85,6 +85,11 @@ def api_prefs_change():
     return jsonify(f.prefs.to_dict())
 
 
+@app.get("/about")
+def about():
+    return render_template("about.html")
+
+
 @app.get("/vn/<vid>")
 def vn_page(vid: str):
     if not re.fullmatch(r"v\d{1,7}", vid):

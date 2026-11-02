@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>About - Yoru no Toshokan</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header class="slim">
+  <a href="/" id="back" class="back">← Back to search</a>
+  <a href="/" class="brand-small">Yoru no Toshokan <span class="sign" aria-hidden="true">夜</span></a>
+</header>
+
+<main class="about">
+  <h2 class="about-title">About Yoru no Toshokan</h2>
+  <p class="lede">夜の図書館, "the night library". A small, free program for finding visual novels by
+    describing what you want in your own words.</p>
+
+  <section class="disclaimer">
+    <h3>Disclaimer</h3>
+    <p><strong>This is a free, unofficial, non-commercial fan project. I own nothing shown here.</strong></p>
+    <ul>
+      <li>Every title, cover, screenshot, description, character and trademark belongs to its
+        respective creators, publishers and rights holders.</li>
+      <li>All visual novel information comes from <a href="https://vndb.org" target="_blank" rel="noopener">VNDB</a>
+        and its volunteer contributors, under VNDB's <a href="https://vndb.org/d17#4" target="_blank" rel="noopener">data license</a>.</li>
+      <li><strong>Nothing here is paid.</strong> There's nothing for sale, no ads, no donations, and no
+        money is made from it in any way.</li>
+      <li>It does not host, sell, share or link to copies of any game.</li>
+      <li>Yoru no Toshokan is not affiliated with or endorsed by VNDB or any developer or publisher.</li>
+    </ul>
+  </section>
+
+  <h2>Questions</h2>
+  <div class="faq">
+    <details>
+      <summary>Is this program free?</summary>
+      <p>Yes, completely. There's no paid version, no account, no ads and no tracking. The source code is
+        open on <a href="https://github.com/wideindeed/Yoru-no-toshokan" target="_blank" rel="noopener">GitHub</a>
+        under the MIT license, so anyone can read it, change it, or share it.</p>
+    </details>
+    <details>
+      <summary>What does it do, exactly?</summary>
+      <p>You type something like "fantasy setting, female lead, multiple endings". It works out which VNDB
+        tags, languages, engines, platforms, lengths and dates you mean, shows them as labels so you can
+        check them, then asks VNDB for matching titles. Click a cover for its details: synopsis, rating,
+        length, staff, tags, screenshots and related titles.</p>
+    </details>
+    <details>
+      <summary>Where does the information come from?</summary>
+      <p>From VNDB's official public API, live, each time you search. Answers are kept on your computer for
+        a day so repeated searches don't bother VNDB's servers. It doesn't scrape websites.</p>
+    </details>
+    <details>
+      <summary>Is this made by VNDB?</summary>
+      <p>No. It's an independent fan project that uses VNDB's free API. If you like it, the people to thank
+        are VNDB's maintainers and the volunteers who fill in its database.</p>
+    </details>
+    <details>
+      <summary>Can I download or play games through it?</summary>
+      <p>No. It's a search tool only. It shows information and links to the title's VNDB page and official
+        sites. To play something, buy it or get it from its official source.</p>
+    </details>
+    <details>
+      <summary>Are the covers and screenshots stored anywhere?</summary>
+      <p>No. Your browser loads them straight from VNDB's image server, the same way vndb.org does.
+        Nothing is copied or saved by this program.</p>
+    </details>
+    <details>
+      <summary>A title is missing, or its information is wrong.</summary>
+      <p>Everything shown comes from VNDB, so corrections belong there. Anyone can edit VNDB, and fixes show
+        up here too. Also check that it isn't hidden by the <em>Mature content</em> switch, your
+        <em>Always exclude</em> list, or your <em>Not interested</em> list.</p>
+    </details>
+    <details>
+      <summary>What does the Mature content switch do?</summary>
+      <p>Off (the default): nothing with sexual content is shown, and suggestive or violent covers are
+        blurred until clicked. On: only titles with sexual content are shown. It's for adults only.</p>
+    </details>
+    <details>
+      <summary>Does anything about me get sent anywhere?</summary>
+      <p>Only your searches, which go to VNDB to get results. Your preferences, hidden titles and settings
+        stay in a file on your own computer.</p>
+    </details>
+    <details>
+      <summary>What is "LLM rewrite"?</summary>
+      <p>An optional helper for long, chatty sentences. If you've installed
+        <a href="https://ollama.com" target="_blank" rel="noopener">Ollama</a>, a model running on your own
+        computer turns your sentence into short keywords before searching. It's off by default, and nothing
+        is sent online.</p>
+    </details>
+    <details>
+      <summary>I own something shown here and want it removed.</summary>
+      <p>Covers, screenshots and descriptions are served by VNDB, so please contact them at
+        <a href="mailto:contact@vndb.org">contact@vndb.org</a>. Once it's gone from VNDB, it disappears
+        here too, within a day. For anything about this program itself, open an issue on
+        <a href="https://github.com/wideindeed/Yoru-no-toshokan/issues" target="_blank" rel="noopener">GitHub</a>.</p>
+    </details>
+    <details>
+      <summary>How do I report a bug or suggest something?</summary>
+      <p>Open an issue on <a href="https://github.com/wideindeed/Yoru-no-toshokan/issues" target="_blank" rel="noopener">GitHub</a>.
+        Including the exact search you typed helps a lot.</p>
+    </details>
+  </div>
+
+  <p class="fine">Data © VNDB contributors, <a href="https://vndb.org/d17#4" target="_blank" rel="noopener">Open Database License</a>.
+    Artwork © its respective owners. Code: MIT license.</p>
+</main>
+
+<script>
+  document.getElementById("back").addEventListener("click", (e) => {
+    if (history.length > 1) { e.preventDefault(); history.back(); }
+  });
+</script>
+</body>
+</html>
