@@ -55,3 +55,10 @@ def test_merge_and_card():
 def test_description_is_safe():
     out = aq.description('<script>x</script><br>ok <i>it</i> ~!twist!~')
     assert "<script>" not in out and "<br>" in out and "<i>it</i>" in out and 'class="spoiler"' in out
+
+
+def test_shelf_sorts():
+    from query_builder import api_sort
+    assert api_sort("soonest") == ("released", False) and api_sort("rating") == ("rating", True)
+    q, _ = aq.build([Criterion("votecount", 100, "100+ users", op=">=")], _index(), CFG, sort="trending")
+    assert "TRENDING_DESC" in q and "popularity_greater: 99" in q

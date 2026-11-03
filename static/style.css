@@ -451,3 +451,11 @@ body.spoilers .spoiler-tag { display: inline-block; }
   background: radial-gradient(ellipse 90% 140% at 50% -30%, rgba(164, 80, 122, .42), rgba(164, 80, 122, .08) 75%); }
 html { transition: background-color .4s; }
 body { transition: color .4s; }
+
+/* shelves: ready-made browsing under the search bar */
+.shelves { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 13px; color: var(--muted); }
+.shelves > span:first-child { margin-right: 4px; font-style: italic; }
+#shelves { display: contents; }
+.shelves button { padding: 3px 10px; font: 13px var(--serif); border: 1px solid var(--line); border-radius: 999px;
+                  background: rgba(0, 0, 0, .25); color: var(--paper); cursor: pointer; }
+.shelves button:hover { border-color: var(--amber); color: var(--amber); }

@@ -17,7 +17,8 @@ from parsing.model import Criterion
 from vndb.tags import TagIndex
 
 SORTS = {"rating": ["SCORE_DESC", "POPULARITY_DESC"], "votecount": ["POPULARITY_DESC"],
-         "released": ["START_DATE_DESC", "POPULARITY_DESC"], "title": ["TITLE_ROMAJI"]}
+         "released": ["START_DATE_DESC", "POPULARITY_DESC"], "title": ["TITLE_ROMAJI"],
+         "trending": ["TRENDING_DESC", "POPULARITY_DESC"]}
 UNSUPPORTED = {"lang", "platform", "engine", "length"}
 MAX_VARIANTS = 8
 CARD_FIELDS = ("id title{romaji english native} startDate{year} averageScore popularity volumes status "

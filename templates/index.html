@@ -31,6 +31,8 @@
         {% for s in ["rating", "votecount", "released", "title"] %}
         <option value="{{ s }}" {% if s == default_sort %}selected{% endif %}>{{ s }}</option>
         {% endfor %}
+        <option value="trending" hidden>trending</option>
+        <option value="soonest" hidden>release (soonest)</option>
       </select>
     </label>
     <label>Match
@@ -43,6 +45,7 @@
     <label title="Rewrite conversational text with the local Ollama model first">
       <input type="checkbox" id="llm" {% if use_llm %}checked{% endif %}> LLM rewrite</label>
   </div>
+  <div class="shelves"><span>Not sure what you want? Browse:</span> <span id="shelves"></span></div>
   <details id="tags-panel"><summary>Browse tags</summary><div id="tag-browser"></div></details>
   <details id="prefs-panel"><summary>Preferences</summary>
     <div class="prefs">

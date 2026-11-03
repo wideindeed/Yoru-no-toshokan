@@ -9,7 +9,13 @@ VN_FIELDS = ", ".join([
     "tags.id", "tags.name", "tags.rating", "tags.spoiler", "tags.category",
     "developers.name",
 ])
-SORTS = {"rating", "votecount", "released", "title"}
+SORTS = {"rating", "votecount", "released", "title", "soonest"}
+
+
+def api_sort(sort: str) -> tuple[str, bool]:
+    """Our sort name -> (VNDB sort field, reverse). "soonest" is release date, oldest first."""
+    return ("released" if sort == "soonest" else sort), sort not in ("title", "soonest")
+
 _INVERT = {">=": "<", "<": ">=", ">": "<=", "<=": ">", "=": "!=", "!=": "="}
 
 

@@ -88,7 +88,8 @@ class Finder:
                page: int = 1, mature: bool = False, results: int | None = None,
                skip_excludes=(), use_prefs: bool = True, source: str = "vn") -> SearchResult:
         """skip_excludes: always-excluded tag ids dropped for this search only."""
-        sort = sort if sort in qb.SORTS else self.cfg["default_sort"]
+        from anilist import query as aq
+        sort = sort if sort in (aq.SORTS if source == "ln" else qb.SORTS) else self.cfg["default_sort"]
         n = int(results or self.cfg["results_per_page"])
         crits = list(criteria)
         if use_prefs:
@@ -100,8 +101,9 @@ class Finder:
         hidden = [v for v in self.prefs.hidden if v.startswith("v")] if use_prefs else []
         if hidden:   # "not interested" VNs never come back
             filters = qb._and([filters, *[["id", "!=", v] for v in hidden]])
-        data = self.client.query("vn", filters=filters, fields=qb.VN_FIELDS, sort=sort,
-                                 reverse=sort != "title", results=n, page=page)
+        field, reverse = qb.api_sort(sort)
+        data = self.client.query("vn", filters=filters, fields=qb.VN_FIELDS, sort=field,
+                                 reverse=reverse, results=n, page=page)
         groups = qb.wanted_tag_groups(criteria)
         cards = [qb.to_card(v, self.cfg, groups, mature) for v in data.get("results", [])]
         if mode == "any" and groups:

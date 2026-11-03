@@ -76,6 +76,7 @@ function applySource(src) {
   document.querySelector('#sort option[value="votecount"]').textContent = isLN() ? "popularity" : "votecount";
   setBy(searchBy);
   renderPrefs();
+  renderShelves();
 }
 
 // ---------------------------------------------------------------- preferences (this browser only)
@@ -252,6 +253,39 @@ $("grid").addEventListener("click", (e) => {
 });
 
 
+// ---------------------------------------------------------------- shelves: ready-made browsing for when you don't know what you want
+const day = (n) => new Date(Date.now() + n * 864e5).toISOString().slice(0, 10);   // n days from today
+const crit = (kind, value, display, op = "=") => ({ kind, value, op, label: display, display, exclude: false, phrase: "", method: "shelf" });
+const SHELVES = {   // [label, sort, criteria]
+  vn: [["New and popular", "votecount", () => [crit("released", [[">=", day(-90)], ["<=", day(0)]], "Released in the last 3 months")]],
+       ["Best of the past year", "rating", () => [crit("released", [[">=", day(-365)], ["<=", day(0)]], "Released in the past year"),
+                                                  crit("votecount", 30, "30+ votes", ">=")]],
+       ["Top rated, all time", "rating", () => [crit("votecount", 500, "500+ votes", ">=")]],
+       ["Most popular, all time", "votecount", () => [crit("votecount", 100, "100+ votes", ">=")]],
+       ["Coming soon", "soonest", () => [crit("released", [[">", day(0)], ["<=", day(180)]], "Out in the next 6 months")]]],
+  ln: [["Trending now", "trending", () => [crit("votecount", 100, "100+ users", ">=")]]],
+};
+function renderShelves() {
+  $("shelves").innerHTML = SHELVES[state.source].map(([label], i) => `<button type="button" data-i="${i}">${esc(label)}</button>`).join("");
+  document.querySelector('#sort option[value="trending"]').hidden = !isLN();
+  const s = $("sort").value;
+  if ((s === "trending" && !isLN()) || (s === "soonest" && isLN())) $("sort").value = "rating";
+}
+$("shelves").addEventListener("click", (e) => {
+  const b = e.target.closest("button");
+  if (!b) return;
+  const [, sort, crits] = SHELVES[state.source][+b.dataset.i];
+  $("q").value = "";
+  pushUrl("");
+  $("welcome").hidden = true;
+  $("report").innerHTML = "";
+  $("sort").value = sort;
+  $("mode").value = "all";
+  Object.assign(state, { criteria: crits(), unmatched: [], skip: [], notes: [] });
+  renderChips();
+  search(1);
+});
+
 // ---------------------------------------------------------------- title search
 function titleSearch(t) {
   t = t.trim();
@@ -275,6 +309,7 @@ document.querySelectorAll("#search-form .by button").forEach((b) => b.addEventLi
 $("search-form").addEventListener("submit", (e) => {
   e.preventDefault();
   const q = $("q").value.trim();
+  if ($("sort").value === "soonest") $("sort").value = "rating";   // a shelf's special order doesn't carry over
   pushUrl(q);
   if (searchBy === "title") titleSearch(q);
   else parseAndSearch(q);

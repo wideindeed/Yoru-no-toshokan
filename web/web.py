@@ -65,8 +65,9 @@ def query(criteria_json: str, sort: str, mode: str, page: int, excludes_json: st
     filters = qb._and([qb.build_filters(crits, cfg, mode=mode), qb.mature_filter(False, cfg),
                        *[["id", "!=", v] for v in hidden]])
     sort = sort if sort in qb.SORTS else cfg["default_sort"]
-    return json.dumps({"filters": filters, "fields": qb.VN_FIELDS, "sort": sort,
-                       "reverse": sort != "title", "results": int(cfg["results_per_page"]),
+    field, reverse = qb.api_sort(sort)
+    return json.dumps({"filters": filters, "fields": qb.VN_FIELDS, "sort": field,
+                       "reverse": reverse, "results": int(cfg["results_per_page"]),
                        "page": int(page)})
 
 
