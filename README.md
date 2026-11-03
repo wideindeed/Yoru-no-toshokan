@@ -4,8 +4,11 @@
 
 ### ▶ Try it online: **[wideindeed.github.io/Yoru-no-toshokan](https://wideindeed.github.io/Yoru-no-toshokan/)**
 
-Nothing to install; it runs in your browser and is all ages only. For adult
-titles and the extras below, [run it on your own computer](#getting-started).
+Nothing to install; it runs in your browser.
+
+> **Note:** the online version is **all ages only**. Adult (18+) titles are
+> available only in the [desktop version](#getting-started), which runs on your
+> own computer and has an optional Mature switch.
 
 Tell it what you're in the mood for, the way you'd say it to a friend, and it
 finds matching visual novels on [VNDB](https://vndb.org):
