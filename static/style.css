@@ -358,3 +358,24 @@ body.spoilers .spoiler-tag { display: inline-block; }
 .faq summary:hover { color: var(--amber); }
 .faq details p { margin: 0 0 14px 22px; color: #cfc7b8; }
 .about .fine { margin-top: 40px; color: var(--muted); font-size: 13px; font-style: italic; }
+
+/* ------------------------------------------------------------ tag browser */
+#tags-panel { margin-top: 10px; color: var(--muted); font-size: 13px; }
+#tags-panel summary { cursor: pointer; width: max-content; }
+#tags-panel summary:hover { color: var(--paper); }
+#tag-browser { max-width: 980px; margin-top: 10px; }
+.tb-q { width: 100%; padding: 7px 10px; background: rgba(0, 0, 0, .3); border: 1px solid var(--line); border-radius: 3px; }
+.tb-q:focus { outline: none; border-color: var(--amber-dim); }
+.tb-list { max-height: 340px; overflow-y: auto; margin-top: 6px; }
+.tb-row { display: flex; gap: 6px; align-items: flex-start; padding: 6px 2px; border-bottom: 1px solid rgba(255, 255, 255, .04); }
+.tb-row button { padding: 0 8px; line-height: 1.5; flex: none; }
+.tb-row .tb-ex:hover { background: var(--lantern); color: var(--paper); }
+.tb-row.picked { background: rgba(227, 168, 87, .07); }
+.tb-row.picked-ex { background: rgba(185, 80, 61, .09); }
+.tb-main { margin-left: 4px; }
+.tb-main a { color: var(--paper); text-decoration: none; font: 500 14px var(--serif); }
+.tb-main a:hover { color: var(--amber); }
+.tb-n { margin-left: 8px; font-size: 12px; color: #6f695f; }
+.tb-desc { display: block; font-size: 12px; color: var(--muted); }
+.tb-none { color: #5f5a52; }
+.chip.bad { cursor: pointer; }

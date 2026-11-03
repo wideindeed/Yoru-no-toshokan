@@ -40,6 +40,7 @@
     <label title="Rewrite conversational text with the local Ollama model first">
       <input type="checkbox" id="llm" {% if use_llm %}checked{% endif %}> LLM rewrite</label>
   </div>
+  <details id="tags-panel"><summary>Browse tags</summary><div id="tag-browser"></div></details>
   <details id="prefs-panel"><summary>Preferences</summary>
     <div class="prefs">
       <div><h3>Always exclude · Mature off</h3><div class="plist" id="ex-normal"></div>
@@ -74,6 +75,7 @@
 <main id="grid"></main>
 <div id="more-row"><button id="more" hidden>Load more</button></div>
 
+<script src="{{ url_for('static', filename='tagbrowser.js') }}"></script>
 <script src="{{ url_for('static', filename='app.js') }}"></script>
 </body>
 </html>

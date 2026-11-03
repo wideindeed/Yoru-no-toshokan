@@ -7,6 +7,7 @@ from flask import Flask, abort, jsonify, render_template, request
 
 from finder import Finder
 from parsing.model import Criterion
+from parsing.tag_browser import TagBrowser
 from vndb.client import VNDBError
 
 app = Flask(__name__)
@@ -56,6 +57,15 @@ def api_search():
         return jsonify({"error": f"VNDB API error: {e}"}), 502
     return jsonify({"cards": out.cards, "more": out.more, "page": out.page,
                     "notes": out.notes, "filters": out.filters})
+
+
+@app.get("/api/tags")
+def api_tags():
+    """Tag browser: ?q=text, &mature=1 to include sexual-content tags."""
+    f = get_finder()
+    if f.browser is None:
+        f.browser = TagBrowser(f.index, f.parser.synonyms)
+    return jsonify(f.browser.search(request.args.get("q", "")[:100], include_ero=request.args.get("mature") == "1"))
 
 
 @app.get("/api/prefs")

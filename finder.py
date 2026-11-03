@@ -31,6 +31,7 @@ class Finder:
         self.client = VNDBClient(self.cfg)
         self.index = load_tag_index(self.client, refresh=refresh_tags, config=self.cfg, log=log)
         self.parser = QueryParser(self.index, self.cfg, log=log)
+        self.browser = None            # TagBrowser, built on first use by app.py
         self.prefs = Prefs()
         self.rewriter = None
         if self.cfg.get("use_llm"):

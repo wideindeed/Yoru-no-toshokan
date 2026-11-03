@@ -41,7 +41,7 @@ function renderChips() {
   const good = state.criteria.map((c, i) =>
     `<span class="chip ${c.exclude ? "neg" : ""}" title="${esc(c.method)} from '${esc(c.phrase)}'">${esc(c.display)}<button data-i="${i}">×</button></span>`);
   const bad = state.unmatched.map((u, i) =>
-    `<span class="chip bad" title="not understood - edit synonyms.yaml to teach it">${esc(u)}<button data-u="${i}">×</button></span>`);
+    `<span class="chip bad" data-find="${i}" title="not understood - click to look it up in Browse tags">${esc(u)}<button data-u="${i}">×</button></span>`);
   $("chips").innerHTML = good.concat(bad).join("") || "<em>nothing</em>";
   renderAlways();
 }
@@ -63,6 +63,13 @@ $("always").addEventListener("click", (e) => {
 
 $("chips").addEventListener("click", (e) => {
   const b = e.target.closest("button");
+  const bad = e.target.closest(".chip.bad");
+  if (!b && bad) {              // look the unread words up in the tag browser
+    lookingUp = state.unmatched[+bad.dataset.find];
+    $("tags-panel").open = true;
+    tags.open(lookingUp);
+    return;
+  }
   if (!b) return;
   if (b.dataset.i !== undefined) {
     state.criteria.splice(+b.dataset.i, 1);
@@ -72,6 +79,25 @@ $("chips").addEventListener("click", (e) => {
     state.unmatched.splice(+b.dataset.u, 1);
     renderChips();
   }
+});
+
+// ---------------------------------------------------------------- tag browser
+let lookingUp = null;           // an unmatched phrase being looked up; replaced by the tag picked
+const tags = mountTagBrowser($("tag-browser"), {
+  async search(q) {
+    const r = await fetch(`/api/tags?q=${encodeURIComponent(q)}${$("mature").checked ? "&mature=1" : ""}`);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return r.json();
+  },
+  onPick(t, exclude) {
+    const w = $("welcome"); if (w) w.hidden = true;
+    state.criteria = state.criteria.filter((c) => !(c.kind === "tag" && c.value === t.id));   // + then − flips it
+    state.criteria.push({ kind: "tag", value: t.id, label: t.name, exclude, phrase: "", method: "tag browser",
+                          display: (exclude ? "NOT: " : "") + t.name });
+    if (lookingUp !== null) { state.unmatched = state.unmatched.filter((u) => u !== lookingUp); lookingUp = null; }
+    renderChips();
+    search(1);
+  },
 });
 
 async function search(page) {

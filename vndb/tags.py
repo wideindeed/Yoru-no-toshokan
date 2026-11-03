@@ -9,7 +9,7 @@ from pathlib import Path
 from settings import DATA_DIR, load_config
 
 TAGS_PATH = DATA_DIR / "tags.json"
-TAG_FIELDS = "name, aliases, category, searchable, applicable, vn_count"
+TAG_FIELDS = "name, aliases, category, searchable, applicable, vn_count, description"
 
 
 @dataclass
@@ -21,6 +21,7 @@ class Tag:
     searchable: bool
     applicable: bool
     vn_count: int
+    description: str = ""   # VNDB markup, for the tag browser
 
 
 @dataclass
@@ -73,6 +74,7 @@ def fetch_tags(client) -> list[Tag]:
                 searchable=bool(r.get("searchable")),
                 applicable=bool(r.get("applicable")),
                 vn_count=int(r.get("vn_count") or 0),
+                description=r.get("description") or "",
             )
         )
     return out
@@ -96,9 +98,12 @@ def load_tag_index(client=None, refresh: bool = False, path: Path = TAGS_PATH,
     max_age = cfg["tag_refresh_days"] * 86400
     if path.exists() and not refresh:
         fetched_at, tags = read_tags(path)
-        if time.time() - fetched_at < max_age:
+        if not any(t.description for t in tags):   # saved before descriptions were added
+            log("tags.json has no tag descriptions yet, refreshing...")
+        elif time.time() - fetched_at < max_age:
             return TagIndex.build(tags)
-        log(f"tags.json is older than {cfg['tag_refresh_days']} days, refreshing...")
+        else:
+            log(f"tags.json is older than {cfg['tag_refresh_days']} days, refreshing...")
     if client is None:
         from vndb.client import VNDBClient
         client = VNDBClient(cfg)
