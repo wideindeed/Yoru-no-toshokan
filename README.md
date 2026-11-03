@@ -41,6 +41,9 @@ it on your own computer. It's free, and it needs no account.
 - **Your own filters.** Keep a list of tags you never want to see, for example
   "Gore" or "Netorare", separately for each mode. Hide individual titles you're
   not interested in, and they stay gone.
+- **Browse when you're not sure.** One click on a shelf under the search bar:
+  *New and popular*, *Best of the past year*, *Top rated* and *Most popular*
+  all time, or *Coming soon* for visual novels; *Trending now* for light novels.
 - **Light novels too.** Flip the switch above the search bar to *Light novels*
   and the same sentences search [AniList](https://anilist.co) instead, in an
   indigo bookshop theme. Language, engine, platform and length don't apply to
