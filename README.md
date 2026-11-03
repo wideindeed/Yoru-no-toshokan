@@ -88,6 +88,10 @@ Filler words ("I want", "looking for", "ideally", "please") are skipped.
 - **Match: all tags** demands everything you asked for. **Any tag** is looser
   and puts titles that hit the most of your tags first.
 - Click **×** on any label to drop it, and the search runs again.
+- **Browse tags** under the search bar finds any VNDB tag by name, nickname or
+  description (typos are fine). **+** adds it to the search, **−** excludes it.
+  Click a red "not understood" label to look those words up there.
+  Sexual-content tags are listed only while Mature is on.
 - **how each phrase was read** shows how each part of your sentence was
   matched, handy when a result surprises you.
 
@@ -173,6 +177,24 @@ python cli.py "slice of life, one ending" --mature
 python cli.py "..." --explain        # show how each phrase was matched
 python cli.py --refresh-tags         # re-download the tag list now
 ```
+
+## Web version
+
+`web/` is a browser-only version for GitHub Pages: no server, and each visitor's
+browser talks to VNDB directly. The same parser runs in the page through
+[Pyodide](https://pyodide.org). It's all ages only, with no LLM, and preferences
+are kept in the browser.
+
+It has the same **Browse tags** panel as the desktop version. For adult titles
+it points visitors to the desktop version.
+
+```sh
+python build_web.py              # builds site/
+python -m http.server -d site    # try it at http://localhost:8000
+```
+
+`.github/workflows/pages.yml` builds and publishes it on every push to `main`
+(enable it under Settings → Pages → Source: GitHub Actions).
 
 ## Fair use and privacy
 

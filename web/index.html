@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Yoru no Toshokan</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Find visual novels by describing what you want, the way you'd say it to a friend. Data from VNDB.">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="web.css">
+</head>
+<body>
+<div id="search-view">
+  <header>
+    <a href="about.html" class="about-hang">
+      <span class="lamp-wrap" aria-hidden="true"><span class="cord"></span><span class="chochin"><span class="ji">灯</span></span></span>
+      <span class="about-btn">About &amp; FAQ</span>
+    </a>
+    <div class="brand">
+      <h1><a href="./">Yoru no Toshokan</a></h1>
+      <span class="sign" aria-hidden="true">夜</span>
+      <span class="tagline">visual novels, after hours</span>
+    </div>
+    <form id="search-form">
+      <input id="q" type="text" autocomplete="off" autofocus
+             placeholder="e.g. fantasy setting, english, RPG Maker, multiple endings, female lead">
+      <button type="submit">Search</button>
+    </form>
+    <div class="options">
+      <label>Sort
+        <select id="sort">
+          <option value="rating" selected>rating</option>
+          <option value="votecount">votecount</option>
+          <option value="released">released</option>
+          <option value="title">title</option>
+        </select>
+      </label>
+      <label>Match
+        <select id="mode">
+          <option value="all">all tags</option>
+          <option value="any">any tag (ranked)</option>
+        </select>
+      </label>
+      <a class="allages" href="https://github.com/wideindeed/Yoru-no-toshokan#getting-started" target="_blank" rel="noopener" title="The web version never shows titles with sexual content. The free desktop version has an optional Mature mode.">All ages · adult titles: desktop version ↗</a>
+    </div>
+    <details id="tags-panel"><summary>Browse tags</summary><div id="tag-browser"></div></details>
+    <details id="prefs-panel"><summary>Preferences</summary>
+      <div class="prefs">
+        <div><h3>Always exclude</h3><div class="plist" id="ex-list"></div>
+          <form class="padd"><input placeholder="tag, e.g. Gore"><button>Add</button></form></div>
+        <div><h3>Not interested</h3><div class="plist" id="hidden-list"></div></div>
+      </div>
+      <p class="pmsg-note">Saved in this browser only.</p>
+      <p id="prefs-msg" class="pmsg"></p>
+    </details>
+  </header>
+
+  <section id="understood" hidden>
+    <div>Understood as: <span id="chips"></span></div>
+    <div id="always-row" hidden>Always excluded: <span id="always"></span></div>
+    <details id="explain"><summary>how each phrase was read</summary><table id="report"></table></details>
+  </section>
+
+  <div id="welcome">
+    <p>Say what you're in the mood for, the way you'd say it out loud.</p>
+    <ul>
+      <li><button class="try">fantasy setting, female lead, multiple endings</button></li>
+      <li><button class="try">a slice of life story with one ending, in english</button></li>
+      <li><button class="try">vampires, made in RPG Maker, no horror, after 2015</button></li>
+    </ul>
+  </div>
+  <p id="status"></p>
+  <main id="grid"></main>
+  <div id="more-row"><button id="more" hidden>Load more</button></div>
+</div>
+
+<div id="vn-view" hidden>
+  <header class="slim">
+    <a href="./" id="back" class="back">← Back to results</a>
+    <a href="./" class="brand-small">Yoru no Toshokan <span class="sign" aria-hidden="true">夜</span></a>
+  </header>
+  <div id="vn-body"></div>
+</div>
+
+<footer class="site-foot">Data from <a href="https://vndb.org" target="_blank" rel="noopener">VNDB</a>,
+  <a href="https://vndb.org/d17#4" target="_blank" rel="noopener">ODbL</a>. Unofficial fan project, not affiliated with VNDB.
+  <a href="about.html">About</a></footer>
+
+<script src="https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.js"></script>
+<script src="tagbrowser.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
