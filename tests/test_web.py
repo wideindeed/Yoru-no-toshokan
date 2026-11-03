@@ -36,3 +36,13 @@ def test_adult_requests_are_dropped(web):
     assert [c["display"] for c in p["criteria"]] == ["Fantasy"] and p["notes"]
     q = json.loads(web.query(json.dumps([{"kind": "tag", "value": "g23", "label": "Sexual Content"}]), "rating", "all", 1, "[]", "[]"))
     assert q["filters"] == ["tag", "!=", ["g23", 2, 0.0]]
+
+
+def test_light_novels_stay_all_ages(web):
+    pytest.importorskip("anilist.tags").TAGS_PATH.exists() or pytest.skip("needs data/anilist_tags.json")
+    p = json.loads(web.ln_parse("hentai, isekai villainess"))
+    assert [c["display"] for c in p["criteria"]] == ["Isekai", "Villainess"] and p["notes"]
+    q = json.loads(web.ln_query(json.dumps(p["criteria"]), "rating", "all", 1, "[]", '["l5", "v17"]'))
+    assert "isAdult: false" in q["query"] and "id_not_in: [5]" in q["query"]
+    assert json.loads(web.ln_detail('{"id": 1, "isAdult": true}')) == {"adult": True}
+    assert all(t["category"] != "ero" for t in json.loads(web.ln_tags("breasts")))

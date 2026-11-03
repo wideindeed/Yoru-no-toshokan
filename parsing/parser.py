@@ -30,11 +30,12 @@ ROLE_WORDS = GENDER_WORDS | {w for s in ROLE_SUFFIXES for w in s.split()} | {
 
 class QueryParser:
     def __init__(self, index: TagIndex, cfg: dict | None = None,
-                 synonyms_path=SYNONYMS_PATH, embedder=None, log=print):
+                 synonyms_path=SYNONYMS_PATH, embedder=None, log=print, source: str = "vn"):
         self.cfg = cfg or load_config()
         self.index = index
-        self.synonyms = Synonyms.load(index, synonyms_path, log=log)
-        if embedder is None and self.cfg.get("use_embeddings"):
+        self.source = source
+        self.synonyms = Synonyms.load(index, synonyms_path, log=log, source=source)
+        if embedder is None and self.cfg.get("use_embeddings") and source == "vn":
             embedder = _try_load_embedder(index, self.cfg, log)
         self.matcher = TagMatcher(index, self.synonyms, self.cfg, embedder=embedder)
 

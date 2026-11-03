@@ -29,6 +29,8 @@ DEFAULTS = {
     "request_timeout": 15,
     "max_retries": 5,
     "port": 5050,
+    "anilist_min_interval": 2.1,
+    "ln_min_tag_rank": 50,
     "use_llm": False,
     "llm_backend": "ollama",
     "llm_url": "http://127.0.0.1:11434",

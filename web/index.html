@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-src="vn">
 <head>
   <meta charset="utf-8">
   <title>Yoru no Toshokan</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Find visual novels by describing what you want, the way you'd say it to a friend. Data from VNDB.">
+  <meta name="description" content="Find visual novels by describing what you want, the way you'd say it to a friend. Data from VNDB and AniList.">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="web.css">
@@ -21,6 +21,7 @@
       <span class="sign" aria-hidden="true">夜</span>
       <span class="tagline">visual novels, after hours</span>
     </div>
+    <div class="by src-switch" role="group" aria-label="Library"><button type="button" data-src="vn" class="on">Visual novels</button><button type="button" data-src="ln">Light novels</button></div>
     <form id="search-form">
       <div class="by" role="group" aria-label="Search by"><button type="button" data-by="describe" class="on">Describe</button><button type="button" data-by="title">Title</button></div>
       <input id="q" type="text" autocomplete="off" autofocus
@@ -83,8 +84,9 @@
   <div id="vn-body"></div>
 </div>
 
-<footer class="site-foot">Data from <a href="https://vndb.org" target="_blank" rel="noopener">VNDB</a>,
-  <a href="https://vndb.org/d17#4" target="_blank" rel="noopener">ODbL</a>. Unofficial fan project, not affiliated with VNDB.
+<footer class="site-foot">Data from <a href="https://vndb.org" target="_blank" rel="noopener">VNDB</a>
+  (<a href="https://vndb.org/d17#4" target="_blank" rel="noopener">ODbL</a>) and <a href="https://anilist.co" target="_blank" rel="noopener">AniList</a>.
+  Unofficial fan project, not affiliated with either.
   <a href="about.html">About</a></footer>
 
 <script src="https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.js"></script>

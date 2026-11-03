@@ -20,8 +20,9 @@ function mountTagBrowser(root, { search, onPick }) {
       list.innerHTML = rows.map((t, i) => `<div class="tb-row">
           <button class="tb-add" data-i="${i}" title="Add to the search">+</button>
           <button class="tb-ex" data-i="${i}" title="Exclude from the search">−</button>
-          <span class="tb-main"><a href="https://vndb.org/${esc(t.id)}" target="_blank" rel="noopener" title="open on vndb.org">${esc(t.name)}</a>
-            <span class="tb-n">${t.vn_count} VNs${t.category === "tech" ? " · technical" : ""}${t.why ? " · " + esc(t.why) : ""}</span>
+          <span class="tb-main">${tagLink(t)}
+            <span class="tb-n">${[/^g\d/.test(t.id) ? `${t.vn_count} VNs` : t.id.startsWith("genre:") ? "genre" : "",
+                                  t.category === "tech" ? "technical" : "", esc(t.why || "")].filter(Boolean).join(" · ")}</span>
             ${t.description ? `<span class="tb-desc">${esc(t.description)}</span>` : ""}</span>
         </div>`).join("") || `<em class="tb-none">No tag matches "${esc(q)}".</em>`;
     } catch (e) {
@@ -38,4 +39,12 @@ function mountTagBrowser(root, { search, onPick }) {
     b.closest(".tb-row").classList.add(b.classList.contains("tb-ex") ? "picked-ex" : "picked");
   });
   return { open(q) { input.value = q; run(); input.focus(); } };
+}
+
+// VNDB tags are "g123"; AniList tags "t123" and genres "genre:Name" (light novel mode)
+function tagLink(t) {
+  const e = (x) => String(x ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const vndb = /^g\d/.test(t.id);
+  const url = vndb ? `https://vndb.org/${t.id}` : `https://anilist.co/search/manga?format=NOVEL&genres=${encodeURIComponent(t.name)}`;
+  return `<a href="${e(url)}" target="_blank" rel="noopener" title="open on ${vndb ? "vndb.org" : "anilist.co"}">${e(t.name)}</a>`;
 }

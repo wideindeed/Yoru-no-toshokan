@@ -1,6 +1,7 @@
 """Personal preferences kept in data/prefs.json:
-- exclude: tags always excluded, one list per layer ("normal" = Mature off, "mature" = Mature on)
-- hidden:  VNs marked "not interested", never shown again
+- exclude: tags always excluded, one list per layer ("normal" = Mature off, "mature" = Mature on;
+           "ln_normal" / "ln_mature" for light novels, whose tags are AniList's)
+- hidden:  VNs and light novels ("l..." ids) marked "not interested", never shown again
 """
 from __future__ import annotations
 
@@ -8,7 +9,7 @@ import json
 from pathlib import Path
 
 PREFS_PATH = Path(__file__).resolve().parent / "data" / "prefs.json"
-LAYERS = ("normal", "mature")
+LAYERS = ("normal", "mature", "ln_normal", "ln_mature")
 
 
 class Prefs:
@@ -24,8 +25,8 @@ class Prefs:
         self.path.write_text(json.dumps({"exclude": self.exclude, "hidden": self.hidden},
                                         indent=2, ensure_ascii=False), encoding="utf-8")
 
-    def layer(self, mature: bool) -> str:
-        return "mature" if mature else "normal"
+    def layer(self, mature: bool, source: str = "vn") -> str:
+        return ("ln_" if source == "ln" else "") + ("mature" if mature else "normal")
 
     def add_exclude(self, layer: str, tag_id: str, name: str):
         if layer in LAYERS and all(t["id"] != tag_id for t in self.exclude[layer]):

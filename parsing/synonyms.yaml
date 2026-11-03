@@ -18,6 +18,13 @@
 #   lang: en                   # VNDB language code(s), e.g. en / [en, ja]
 #   platform: win              # VNDB platform code(s), e.g. win / [and, ios]
 #   min_level: 2.0             # optional: stricter tag level for this entry (0-3)
+#   ln: { ... }                # light novel mode (AniList): these targets replace
+#                              # the ones above. AniList tag/genre names, see
+#                              # data/anilist_tags.json. An entry with ONLY `ln:`
+#                              # exists in light novel mode only.
+#
+# In light novel mode, VNDB names AniList doesn't have are skipped quietly;
+# names that exist on both (Female Protagonist, Time Loop...) just work.
 #
 # Tag names are resolved to IDs at startup. If a name no longer exists on
 # VNDB you get a warning in the console and that entry is skipped.
@@ -59,12 +66,36 @@ phrases:
   fantasy:                  { tag: "Fantasy" }
   fantasy setting:          { tag: "Fantasy" }
   fantasy world:            { tag: "Fantasy" }
-  sci-fi:                   { tag: "Science Fiction" }
-  scifi:                    { tag: "Science Fiction" }
+  sci-fi:                   { tag: "Science Fiction", ln: "Sci-Fi" }
+  scifi:                    { tag: "Science Fiction", ln: "Sci-Fi" }
   time loops:               { tag: "Time Loop" }
-  yuri:                     { tag: "Girl x Girl Romance" }
-  bl:                       { tag: "Boy x Boy Romance" }
+  yuri:                     { tag: "Girl x Girl Romance", ln: "Yuri" }
+  bl:                       { tag: "Boy x Boy Romance", ln: "Boys' Love" }
   otome:                    { tag: "Otome Game" }
+
+  # --- light novels only (AniList names) ------------------------------
+  harem:                    { ln: "Female Harem" }
+  harem romance:            { ln: { tag: ["Female Harem", "Romance"] } }
+  reverse harem:            { ln: "Male Harem" }
+  otome isekai:             { ln: { tag: ["Isekai", "Female Protagonist"] } }
+  akuyaku reijou:           { ln: "Villainess" }
+  villainess:               { ln: "Villainess" }
+  reincarnated:             { ln: "Reincarnation" }
+  reincarnated in another world: { ln: { tag: ["Isekai", "Reincarnation"] } }
+  transported to another world:  { ln: "Isekai" }
+  another world:            { ln: "Isekai" }
+  academy:                  { ln: "School" }
+  magic academy:            { ln: { tag: ["School", "Magic"] } }
+  magic school:             { ln: { tag: ["School", "Magic"] } }
+  rom com:                  { ln: { tag: ["Romance", "Comedy"] } }
+  romcom:                   { ln: { tag: ["Romance", "Comedy"] } }
+  romantic comedy:          { ln: { tag: ["Romance", "Comedy"] } }
+  slow life:                { ln: "Iyashikei" }
+  healing:                  { ln: "Iyashikei" }
+  cultivation novel:        { ln: "Cultivation" }
+  game world:               { ln: "Virtual World" }
+  vrmmo:                    { ln: "Virtual World" }
+  op mc:                    { ln: "Super Power" }
 
   # --- engines (the built-in rules already cover these; examples only) ---
   rpgmaker:                 { engine: "RPG Maker" }
@@ -108,17 +139,20 @@ content_levels:
       - "Panchira"                   # g1378
       - "Non-explicit Nudity Only"   # g3194
       - "Low Sexual Content"         # g236
+    ln: { any: ["Ecchi"] }           # light novels: AniList's Ecchi genre
 
   # Full sexual content (eroge).
   explicit:
     all:
       - "Sexual Content"             # g23
+    ln: { all: ["Hentai"] }
 
   # Uses VNDB's "No Sexual Content" tag (~15k VNs). For an even stricter
   # filter, add  exclude_tags: ["Sexual Content"]
   all_ages:
     all:
       - "No Sexual Content"          # g235
+    ln: { exclude_tags: ["Ecchi", "Hentai"] }
 
 # ---------------------------------------------------------------------
 # patterns: regular expressions (case-insensitive, matched as whole words

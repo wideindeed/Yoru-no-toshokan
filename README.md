@@ -1,6 +1,6 @@
 # Yoru no Toshokan &nbsp;夜の図書館
 
-*The night library. Visual novels, after hours.*
+*The night library. Visual novels and light novels, after hours.*
 
 ### ▶ Try it online: **[wideindeed.github.io/Yoru-no-toshokan](https://wideindeed.github.io/Yoru-no-toshokan/)**
 
@@ -41,6 +41,10 @@ it on your own computer. It's free, and it needs no account.
 - **Your own filters.** Keep a list of tags you never want to see, for example
   "Gore" or "Netorare", separately for each mode. Hide individual titles you're
   not interested in, and they stay gone.
+- **Light novels too.** Flip the switch above the search bar to *Light novels*
+  and the same sentences search [AniList](https://anilist.co) instead, in an
+  indigo bookshop theme. Language, engine, platform and length don't apply to
+  books, so those parts are skipped (and it says so).
 - **Bookmarkable searches.** Each search lives in the address bar, so you can
   save it or share it.
 
@@ -194,7 +198,7 @@ python cli.py --refresh-tags         # re-download the tag list now
 Live at **<https://wideindeed.github.io/Yoru-no-toshokan/>**.
 
 `web/` is a browser-only version for GitHub Pages: no server, and each visitor's
-browser talks to VNDB directly. The same parser runs in the page through
+browser talks to VNDB (and AniList, in light novel mode) directly. The same parser runs in the page through
 [Pyodide](https://pyodide.org). It's all ages only, with no LLM, and preferences
 are kept in the browser.
 
@@ -211,25 +215,27 @@ python -m http.server -d site    # try it at http://localhost:8000
 
 ## Fair use and privacy
 
-- Uses only the official, public [VNDB API](https://api.vndb.org/kana); it does
-  not scrape the website.
+- Uses only the official, public [VNDB API](https://api.vndb.org/kana) and
+  [AniList API](https://docs.anilist.co); it does not scrape either website.
 - Requests are spaced out to stay well inside VNDB's rate limits, and answers
   are cached locally for a day so repeat searches don't touch the server.
 - Covers and screenshots load directly from VNDB's image server and are never
   copied or stored.
 - Nothing about you leaves your computer except the searches themselves, which
-  go to VNDB.
+  go to VNDB or AniList.
 
 ## Credits and license
 
 **Yoru no Toshokan is a free, unofficial, non-commercial fan project. It is not
-affiliated with or endorsed by VNDB, or by any developer or publisher. I own
+affiliated with or endorsed by VNDB or AniList, or by any developer or publisher. I own
 nothing shown in it, and no money is made from it.** The app has an About page
 with a full disclaimer and FAQ.
 
 - Visual novel data comes from [vndb.org](https://vndb.org) and is available
   under the [Open Database License](https://vndb.org/d17#4). Thanks to the VNDB
   team and contributors for the database and the free API.
+- Light novel data comes from [AniList](https://anilist.co) through its free
+  public API. Thanks to the AniList team and contributors.
 - Cover art and screenshots belong to their respective creators and
   publishers.
 - The VNDB API is free for non-commercial use, so please keep forks of this
@@ -249,6 +255,7 @@ parsing/                    sentence parsing, synonyms.yaml, optional helpers
 query_builder.py            turns parsed criteria into VNDB API filters
 details.py                  detail page data
 vndb/                       API client (rate limiting, caching), tag list
+anilist/                    light novel mode: AniList client, tag list, GraphQL queries
 templates/, static/         the web page (plain HTML, CSS, JavaScript)
 docs/api_notes.md           notes on the VNDB API
 ```

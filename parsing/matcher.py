@@ -40,8 +40,12 @@ class Synonyms:
         return phrase.strip().lower() in self.entries
 
     @classmethod
-    def load(cls, index: TagIndex, path: Path | str = SYNONYMS_PATH, log=print) -> "Synonyms":
+    def load(cls, index: TagIndex, path: Path | str = SYNONYMS_PATH, log=print,
+             source: str = "vn") -> "Synonyms":
+        """source "ln" (AniList): an entry's `ln:` block replaces its targets, and names
+        AniList doesn't have are skipped quietly (most entries are written for VNDB)."""
         raw = yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {}
+        ln = source == "ln"
         levels = raw.get("content_levels") or {}
         warnings: list[str] = []
         warned: set[str] = set()
@@ -50,7 +54,8 @@ class Synonyms:
             t = index.by_name(name) or index.lookup(name)
             if t is None and name not in warned:
                 warned.add(name)
-                warnings.append(f"synonyms.yaml: tag {name!r} (used by {where!r}) not found on VNDB; skipped")
+                warnings.append(f"synonyms.yaml: tag {name!r} (used by {where!r}) not found on "
+                                f"{'AniList' if ln else 'VNDB'}; skipped")
             return t
 
         def as_list(v):
@@ -85,6 +90,8 @@ class Synonyms:
             if e.get("content"):
                 name = e["content"]
                 spec = levels.get(name)
+                if ln and spec is not None:
+                    spec = spec.get("ln", spec)
                 if spec is None:
                     warnings.append(f"synonyms.yaml: content level {name!r} (used by {key!r}) is not defined")
                 else:
@@ -105,6 +112,10 @@ class Synonyms:
             key = str(key).strip().lower()
             if isinstance(e, str):
                 e = {"tag": e}
+            if not ln and isinstance(e, dict) and set(e) == {"ln"}:
+                continue                    # light-novel-only entry
+            if ln and isinstance(e, dict) and "ln" in e:
+                e = e["ln"] if isinstance(e["ln"], dict) else {"tag": e["ln"]}
             n_warn = len(warnings)
             crits = build(key, e or {})
             if crits:
@@ -128,8 +139,12 @@ class Synonyms:
             if crits:
                 patterns.append((rx, crits))
 
-        for w in warnings:
-            log("WARNING: " + w)
+        if ln:
+            if warnings:
+                log(f"AniList: {len(warnings)} synonyms.yaml targets don't apply to light novels (normal)")
+        else:
+            for w in warnings:
+                log("WARNING: " + w)
         return cls(entries, warnings, patterns)
 
 

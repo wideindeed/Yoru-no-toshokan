@@ -5,13 +5,14 @@ import re
 
 from flask import Flask, abort, jsonify, render_template, request
 
-from finder import Finder
+from finder import SOURCES, Finder
 from parsing.model import Criterion
 from parsing.tag_browser import TagBrowser
 from vndb.client import VNDBError
 
 app = Flask(__name__)
 finder: Finder | None = None
+API_NAME = {"vn": "VNDB", "ln": "AniList"}
 
 
 def get_finder() -> Finder:
@@ -19,6 +20,11 @@ def get_finder() -> Finder:
     if finder is None:
         finder = Finder()
     return finder
+
+
+def source_of(body: dict | None = None) -> str:
+    s = (body or {}).get("source") or request.args.get("source") or "vn"
+    return s if s in SOURCES else "vn"
 
 
 @app.get("/")
@@ -31,7 +37,11 @@ def index():
 @app.post("/api/parse")
 def api_parse():
     body = request.get_json(force=True)
-    res, rewritten, note = get_finder().interpret(body.get("text", ""), use_llm=bool(body.get("use_llm")))
+    try:
+        res, rewritten, note = get_finder().interpret(body.get("text", ""), use_llm=bool(body.get("use_llm")),
+                                                      source=source_of(body))
+    except VNDBError as e:   # first LN use downloads the AniList tag list
+        return jsonify({"error": f"{API_NAME[source_of(body)]} API error: {e}"}), 502
     return jsonify({
         "criteria": [c.to_dict() for c in res.criteria],
         "unmatched": res.unmatched,
@@ -45,6 +55,7 @@ def api_parse():
 @app.post("/api/search")
 def api_search():
     body = request.get_json(force=True)
+    source = source_of(body)
     try:
         crits = [Criterion.from_dict(d) for d in body.get("criteria", [])]
     except (ValueError, TypeError) as e:
@@ -52,20 +63,20 @@ def api_search():
     try:
         out = get_finder().search(crits, sort=body.get("sort"), mode=body.get("mode", "all"),
                                   page=int(body.get("page", 1)), mature=bool(body.get("mature")),
-                                  skip_excludes=set(body.get("skip_excludes") or []))
+                                  skip_excludes=set(body.get("skip_excludes") or []), source=source)
     except VNDBError as e:
-        return jsonify({"error": f"VNDB API error: {e}"}), 502
+        return jsonify({"error": f"{API_NAME[source]} API error: {e}"}), 502
     return jsonify({"cards": out.cards, "more": out.more, "page": out.page,
                     "notes": out.notes, "filters": out.filters})
 
 
 @app.get("/api/tags")
 def api_tags():
-    """Tag browser: ?q=text, &mature=1 to include sexual-content tags."""
-    f = get_finder()
-    if f.browser is None:
-        f.browser = TagBrowser(f.index, f.parser.synonyms)
-    return jsonify(f.browser.search(request.args.get("q", "")[:100], include_ero=request.args.get("mature") == "1"))
+    """Tag browser: ?q=text, &mature=1 to include sexual-content tags, &source=ln for AniList tags."""
+    side = get_finder().side(source_of())
+    if side.browser is None:
+        side.browser = TagBrowser(side.index, side.parser.synonyms)
+    return jsonify(side.browser.search(request.args.get("q", "")[:100], include_ero=request.args.get("mature") == "1"))
 
 
 @app.get("/api/prefs")
@@ -75,18 +86,18 @@ def api_prefs():
 
 @app.post("/api/prefs")
 def api_prefs_change():
-    """{action: exclude|unexclude|hide|unhide, layer, name|id, title}"""
+    """{action: exclude|unexclude|hide|unhide, layer, name|id, title, source}"""
     f, body = get_finder(), request.get_json(force=True)
-    act, layer = body.get("action"), body.get("layer", "normal")
+    act, layer, source = body.get("action"), body.get("layer", "normal"), source_of(body)
     if act == "exclude":
-        tags = f.resolve_tags(str(body.get("name", "")).strip())
+        tags = f.resolve_tags(str(body.get("name", "")).strip(), source=source)
         if not tags:
-            return jsonify({"error": f"no VNDB tag matches {body.get('name')!r}"}), 400
+            return jsonify({"error": f"no {API_NAME[source]} tag matches {body.get('name')!r}"}), 400
         for t in tags:
             f.prefs.add_exclude(layer, t.id, t.name)
     elif act == "unexclude":
         f.prefs.remove_exclude(layer, body.get("id"))
-    elif act == "hide" and re.fullmatch(r"v\d{1,7}", str(body.get("id"))):
+    elif act == "hide" and re.fullmatch(r"[vl]\d{1,9}", str(body.get("id"))):
         f.prefs.hide(body["id"], body.get("title", ""))
     elif act == "unhide":
         f.prefs.unhide(body.get("id"))
@@ -112,6 +123,20 @@ def vn_page(vid: str):
     if vn is None:
         abort(404)
     return render_template("vn.html", vn=vn, mature=mature)
+
+
+@app.get("/ln/<lid>")
+def ln_page(lid: str):
+    if not re.fullmatch(r"l\d{1,9}", lid):
+        abort(404)
+    mature = request.args.get("mature") == "1"
+    try:
+        ln = get_finder().ln_details(lid, mature=mature)
+    except VNDBError as e:
+        return f"AniList API error: {e}", 502
+    if ln is None:
+        abort(404)
+    return render_template("ln.html", ln=ln, mature=mature)
 
 
 if __name__ == "__main__":

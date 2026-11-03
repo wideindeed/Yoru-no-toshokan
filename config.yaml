@@ -39,6 +39,10 @@ min_request_interval: 1.5    # seconds between live requests (200 req / 5 min li
 request_timeout: 15
 max_retries: 5
 
+# --- Light novels (AniList GraphQL, no key needed) ---
+anilist_min_interval: 2.1    # seconds between live requests (AniList allows 30-90/min)
+ln_min_tag_rank: 50          # a tag counts only if AniList rates it at least this relevant (0-100)
+
 # --- Optional LLM rewriter (Ollama) ---
 # Rewrites conversational input into keywords for the rule parser; the parser
 # still decides every filter. Falls back to the rule parser if Ollama is down.

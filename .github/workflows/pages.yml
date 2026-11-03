@@ -26,7 +26,7 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install requests PyYAML
-      - run: python build_web.py   # downloads VNDB's tag list (about 30 polite requests)
+      - run: python build_web.py   # downloads the VNDB (about 30 polite requests) and AniList tag lists
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

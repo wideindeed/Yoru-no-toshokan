@@ -1,4 +1,6 @@
-"""Glue shared by cli.py and app.py: text -> (rewrite) -> parse -> query -> cards."""
+"""Glue shared by cli.py and app.py: text -> (rewrite) -> parse -> query -> cards.
+
+Two sources: "vn" (VNDB) and "ln" (light novels from AniList, set up on first use)."""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -12,6 +14,8 @@ from settings import load_config
 from vndb.client import VNDBClient
 from vndb.tags import load_tag_index
 
+SOURCES = ("vn", "ln")
+
 
 @dataclass
 class SearchResult:
@@ -24,48 +28,78 @@ class SearchResult:
     notes: list[str] = field(default_factory=list)
 
 
+class LightNovels:
+    """AniList side: its own client, tag index, parser and tag browser."""
+
+    def __init__(self, cfg: dict, refresh_tags: bool = False, log=print):
+        from anilist import tags as al_tags
+        from anilist.client import AniListClient
+        self.client = AniListClient(cfg)
+        self.index = al_tags.load_tag_index(self.client, refresh=refresh_tags, config=cfg, log=log)
+        self.parser = QueryParser(self.index, cfg, log=log, source="ln")
+        self.browser = None
+        self.rewriter = None
+
+
 class Finder:
     def __init__(self, cfg: dict | None = None, refresh_tags: bool = False, log=print):
         self.cfg = cfg or load_config()
         self.log = log
+        self.refresh_tags = refresh_tags
         self.client = VNDBClient(self.cfg)
         self.index = load_tag_index(self.client, refresh=refresh_tags, config=self.cfg, log=log)
         self.parser = QueryParser(self.index, self.cfg, log=log)
         self.browser = None            # TagBrowser, built on first use by app.py
         self.prefs = Prefs()
         self.rewriter = None
+        self._ln: LightNovels | None = None
         if self.cfg.get("use_llm"):
             from parsing.llm_rewrite import LLMRewriter
             self.rewriter = LLMRewriter(self.cfg, self.parser, log=log)
 
+    @property
+    def ln(self) -> LightNovels:
+        if self._ln is None:
+            self._ln = LightNovels(self.cfg, self.refresh_tags, log=self.log)
+        return self._ln
+
+    def side(self, source: str):
+        """Whatever holds index / parser / browser / rewriter for a source."""
+        return self.ln if source == "ln" else self
+
     # ---------------------------------------------------------------- parse
-    def interpret(self, text: str, use_llm: bool | None = None) -> tuple[ParseResult, str | None, str]:
+    def interpret(self, text: str, use_llm: bool | None = None,
+                  source: str = "vn") -> tuple[ParseResult, str | None, str]:
         """Returns (parse result, rewritten text or None, note about the LLM)."""
-        use_llm = self.rewriter is not None if use_llm is None else use_llm
-        if use_llm and self.rewriter is None:
+        side = self.side(source)
+        use_llm = bool(self.cfg.get("use_llm")) if use_llm is None else use_llm
+        if use_llm and side.rewriter is None:
             from parsing.llm_rewrite import LLMRewriter
-            self.rewriter = LLMRewriter(self.cfg, self.parser, log=self.log)
+            side.rewriter = LLMRewriter(self.cfg, side.parser, log=self.log)
         if use_llm:
-            rw = self.rewriter.rewrite(text)
+            rw = side.rewriter.rewrite(text)
             if rw.text is not None:
-                return self.parser.parse(rw.text), rw.text, rw.note
-            return self.parser.parse(text), None, rw.note
-        return self.parser.parse(text), None, ""
+                return side.parser.parse(rw.text), rw.text, rw.note
+            return side.parser.parse(text), None, rw.note
+        return side.parser.parse(text), None, ""
 
     # --------------------------------------------------------------- search
     def search(self, criteria: list[Criterion], sort: str | None = None, mode: str = "all",
                page: int = 1, mature: bool = False, results: int | None = None,
-               skip_excludes=(), use_prefs: bool = True) -> SearchResult:
+               skip_excludes=(), use_prefs: bool = True, source: str = "vn") -> SearchResult:
         """skip_excludes: always-excluded tag ids dropped for this search only."""
         sort = sort if sort in qb.SORTS else self.cfg["default_sort"]
         n = int(results or self.cfg["results_per_page"])
         crits = list(criteria)
         if use_prefs:
             crits += [Criterion("tag", t["id"], t["name"], exclude=True)
-                      for t in self.prefs.exclude[self.prefs.layer(mature)] if t["id"] not in skip_excludes]
+                      for t in self.prefs.exclude[self.prefs.layer(mature, source)] if t["id"] not in skip_excludes]
+        if source == "ln":
+            return self._search_ln(criteria, crits, sort, mode, page, mature, n, use_prefs)
         filters = qb.build_filters(crits, self.cfg, mode=mode, mature=mature)
-        if use_prefs and self.prefs.hidden:   # "not interested" VNs never come back
-            filters = qb._and([filters, *[["id", "!=", v] for v in self.prefs.hidden]])
+        hidden = [v for v in self.prefs.hidden if v.startswith("v")] if use_prefs else []
+        if hidden:   # "not interested" VNs never come back
+            filters = qb._and([filters, *[["id", "!=", v] for v in hidden]])
         data = self.client.query("vn", filters=filters, fields=qb.VN_FIELDS, sort=sort,
                                  reverse=sort != "title", results=n, page=page)
         groups = qb.wanted_tag_groups(criteria)
@@ -79,6 +113,20 @@ class Finder:
             notes.append("Your content words override the Mature toggle.")
         return SearchResult(cards, bool(data.get("more")), filters, page, sort, mode, notes)
 
+    def _search_ln(self, criteria, crits, sort, mode, page, mature, n, use_prefs) -> SearchResult:
+        from anilist import query as aq
+        hidden = [h for h in self.prefs.hidden if h.startswith(aq.LN_PREFIX)] if use_prefs else []
+        q, notes = aq.build(crits, self.ln.index, self.cfg, mode=mode, mature=mature, page=page,
+                            sort=sort, hidden=hidden, per_page=n)
+        media, more = aq.merge(self.ln.client.gql(q), sort)
+        groups = qb.wanted_tag_groups(criteria)
+        cards = [aq.to_card(m, self.cfg, groups, mature) for m in media]
+        if mode == "any" and groups:
+            cards.sort(key=lambda c: -c["hits"])
+        if not criteria:
+            notes.append("No criteria understood; showing top AniList light novels.")
+        return SearchResult(cards, more, q, page, sort, mode, notes)
+
     # -------------------------------------------------------------- details
     def details(self, vid: str, mature: bool = False) -> dict | None:
         """One VN for the detail page (one cached API call)."""
@@ -86,14 +134,24 @@ class Finder:
         rows = data.get("results") or []
         return details.shape(rows[0], self.cfg, mature) if rows else None
 
+    def ln_details(self, lid: str, mature: bool = False) -> dict | None:
+        """One light novel for the detail page (one cached AniList call)."""
+        from anilist import query as aq
+        mid = aq.media_id(lid)
+        if mid is None:
+            return None
+        m = self.ln.client.gql(aq.detail_query(mid)).get("Media")
+        return aq.shape(m, self.cfg, mature) if m else None
+
     # ---------------------------------------------------------------- prefs
-    def resolve_tags(self, name: str) -> list:
-        """Tag name/alias/synonym/typo -> VNDB tags (for the always-exclude list)."""
-        t = self.index.by_name(name) or self.index.lookup(name)
+    def resolve_tags(self, name: str, source: str = "vn") -> list:
+        """Tag name/alias/synonym/typo -> tags (for the always-exclude list)."""
+        side = self.side(source)
+        t = side.index.by_name(name) or side.index.lookup(name)
         if t:
             return [t]
-        m = self.parser.matcher.match(name, embeddings=False)
+        m = side.parser.matcher.match(name, embeddings=False)
         ids = []
         for c in m.criteria if m else []:
             ids += [c.value] if c.kind == "tag" else c.value if c.kind == "tag_any" else []
-        return [self.index.tags[i] for i in ids]
+        return [side.index.tags[i] for i in ids]

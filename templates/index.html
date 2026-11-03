@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-src="vn">
 <head>
   <meta charset="utf-8">
   <title>Yoru no Toshokan</title>
@@ -18,6 +18,7 @@
     <span class="sign" aria-hidden="true">夜</span>
     <span class="tagline">visual novels, after hours</span>
   </div>
+  <div class="by src-switch" role="group" aria-label="Library"><button type="button" data-src="vn" class="on">Visual novels</button><button type="button" data-src="ln">Light novels</button></div>
   <form id="search-form">
     <div class="by" role="group" aria-label="Search by"><button type="button" data-by="describe" class="on">Describe</button><button type="button" data-by="title">Title</button></div>
     <input id="q" type="text" autocomplete="off" autofocus
@@ -38,7 +39,7 @@
         <option value="any">any tag (ranked)</option>
       </select>
     </label>
-    <label title="On: only games with sexual content (covers unblurred). Off: none of them."><input type="checkbox" id="mature"> Mature content</label>
+    <label title="Visual novels: on shows only games with sexual content (covers unblurred), off none of them. Light novels: on also includes adult novels."><input type="checkbox" id="mature"> Mature content</label>
     <label title="Rewrite conversational text with the local Ollama model first">
       <input type="checkbox" id="llm" {% if use_llm %}checked{% endif %}> LLM rewrite</label>
   </div>

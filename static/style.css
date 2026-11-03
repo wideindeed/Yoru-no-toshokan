@@ -383,3 +383,71 @@ body.spoilers .spoiler-tag { display: inline-block; }
 .tb-desc { display: block; font-size: 12px; color: var(--muted); }
 .tb-none { color: #5f5a52; }
 .chip.bad { cursor: pointer; }
+
+/* ------------------------------------------------- library switch (VN / LN) */
+.src-switch { display: inline-flex; margin: 0 0 10px; border: 1px solid var(--line); border-radius: 3px; overflow: hidden; }
+.src-switch button { border: 0; border-radius: 0; padding: 4px 12px; font: 13px var(--serif); background: rgba(0, 0, 0, .3); color: var(--muted); }
+.src-switch button + button { border-left: 1px solid var(--line); }
+.src-switch button.on { background: rgba(227, 168, 87, .14); color: var(--amber); }
+.src-switch button:not(.on):hover { background: rgba(255, 255, 255, .05); color: var(--paper); }
+
+/* ------------------------------------------- light novel mode: the bookshop
+   Same street, one door down: a used bookshop open late. Indigo night instead of
+   rain-blue, a pale reading lamp instead of amber, a plum ribbon bookmark (栞)
+   instead of the red lantern, and ruled page lines instead of rain on the glass. */
+[data-src="ln"] {
+  --night: #0f0e1a;
+  --ink: #16152a;
+  --wood: #1d1a28;           /* shelves */
+  --line: #2e2a3a;
+  --paper: #efe5cf;          /* old pages */
+  --muted: #8d8496;
+  --amber: #e6c88f;          /* reading lamp, paler */
+  --amber-dim: #a68d5c;
+  --lantern: #a4507a;        /* plum bookmark ribbon: NOT */
+  --rain: #8f93d6;           /* indigo */
+}
+[data-src="ln"] body {
+  background:
+    radial-gradient(circle at 14% 16%, rgba(230, 200, 143, .09) 0, transparent 22%),
+    radial-gradient(circle at 80% 10%, rgba(164, 80, 122, .10) 0, transparent 20%),
+    radial-gradient(circle at 88% 64%, rgba(143, 147, 214, .08) 0, transparent 26%),
+    radial-gradient(circle at 28% 88%, rgba(230, 200, 143, .05) 0, transparent 28%),
+    linear-gradient(180deg, #0d0c18 0%, #15132a 55%, #1b1520 100%);
+  background-attachment: fixed;
+}
+[data-src="ln"] body::before {          /* ruled lines of a page, still */
+  opacity: .035; animation: none;
+  background-image: repeating-linear-gradient(180deg, transparent 0 27px, rgba(239, 229, 207, .9) 27px 28px);
+  background-size: auto;
+}
+[data-src="ln"] ::selection { background: rgba(230, 200, 143, .32); }
+[data-src="ln"] .sign { border-color: rgba(164, 80, 122, .6); text-shadow: 0 0 8px rgba(164, 80, 122, .6); }
+[data-src="ln"] .src-switch button.on,
+[data-src="ln"] #search-form .by button.on { background: rgba(230, 200, 143, .13); }
+[data-src="ln"] .chip.neg { border-color: rgba(164, 80, 122, .7); background: rgba(164, 80, 122, .13); }
+[data-src="ln"] .spoiler-tag { border-color: rgba(164, 80, 122, .6); }
+[data-src="ln"] .cover { border-radius: 1px 4px 4px 1px; box-shadow: inset 3px 0 0 rgba(0, 0, 0, .35); }  /* a spine */
+[data-src="ln"] .cover::before { background: linear-gradient(0deg, rgba(230, 200, 143, .09), transparent 45%); }
+[data-src="ln"] .tb-row.picked { background: rgba(230, 200, 143, .07); }
+[data-src="ln"] .tb-row.picked-ex { background: rgba(164, 80, 122, .10); }
+/* the lantern becomes a ribbon bookmark hanging out of the header */
+[data-src="ln"] .cord { height: 4px; background: #5a4a5e; }
+[data-src="ln"] .chochin {
+  width: 22px; height: 54px; border-radius: 1px;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 84%, 0 100%);
+  background: linear-gradient(90deg, #6e2c4d 0%, #a4507a 45%, #b9638c 55%, #7a3356 100%);
+  animation: none; filter: drop-shadow(0 0 6px rgba(164, 80, 122, .45));
+}
+[data-src="ln"] .chochin::after { background: repeating-linear-gradient(90deg, transparent 0 3px, rgba(255, 255, 255, .05) 3px 4px); }
+[data-src="ln"] .chochin::before { display: none; }
+[data-src="ln"] .chochin .ji { font-size: 13px; color: rgba(255, 236, 244, .78); margin-bottom: 10px; }
+[data-src="ln"] .about-btn {
+  border-color: rgba(164, 80, 122, .45); border-top-color: rgba(214, 140, 178, .8); color: #e7b9cf;
+  background: radial-gradient(ellipse 90% 140% at 50% -30%, rgba(164, 80, 122, .28), rgba(164, 80, 122, .03) 70%);
+  animation: none; box-shadow: 0 -8px 16px -10px rgba(164, 80, 122, .7);
+}
+[data-src="ln"] .about-hang:hover .about-btn {
+  background: radial-gradient(ellipse 90% 140% at 50% -30%, rgba(164, 80, 122, .42), rgba(164, 80, 122, .08) 75%); }
+html { transition: background-color .4s; }
+body { transition: color .4s; }

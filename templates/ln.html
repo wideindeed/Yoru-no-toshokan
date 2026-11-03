@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en" data-src="ln">
+<head>
+  <meta charset="utf-8">
+  <title>{{ ln.title }} - Yoru no Toshokan</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="vn-page">
+{% set q = "?mature=1" if mature else "" %}
+<header class="slim">
+  <a href="/?src=ln" id="back" class="back">← Back to results</a>
+  <a href="/?src=ln" class="brand-small">Yoru no Toshokan <span class="sign" aria-hidden="true">夜</span></a>
+</header>
+{% if ln.cover and not ln.cover_blur %}<div class="backdrop" style="background-image: url('{{ ln.cover }}')"></div>{% endif %}
+
+<main class="vn">
+  <div class="vn-side">
+    {% if ln.cover %}
+      <div class="cover big {% if ln.cover_blur %}blur{% endif %}"><img src="{{ ln.cover }}" alt="" referrerpolicy="no-referrer"></div>
+    {% else %}
+      <div class="cover big"><div class="placeholder">no cover</div></div>
+    {% endif %}
+    <a class="vndb-link" href="{{ ln.url }}" target="_blank" rel="noopener">Open on anilist.co ↗</a>
+    {% for l in ln.links %}<a class="ext-link" href="{{ l.url }}" target="_blank" rel="noopener">{{ l.label }} ↗</a>{% endfor %}
+  </div>
+
+  <div class="vn-main">
+    <h1>{{ ln.title }}</h1>
+    {% if ln.alttitle %}<div class="alttitle">{{ ln.alttitle }}</div>{% endif %}
+
+    <table class="facts">
+      <tr><th>Score</th><td>{% if ln.rating %}★ {{ "%.1f"|format(ln.rating) }} <span class="muted">({{ ln.votecount }} users, {{ ln.favourites }} favourites)</span>{% else %}unscored{% endif %}</td></tr>
+      <tr><th>Published</th><td>{{ ln.released }}{% if ln.status %} <span class="muted">({{ ln.status }})</span>{% endif %}</td></tr>
+      {% if ln.volumes %}<tr><th>Volumes</th><td>{{ ln.volumes }}</td></tr>{% endif %}
+      {% for role, names in ln.staff %}<tr><th>{{ role }}</th><td>{{ names[:4]|join(", ") }}{% if names|length > 4 %} <span class="muted">+{{ names|length - 4 }}</span>{% endif %}</td></tr>{% endfor %}
+      {% if ln.country %}<tr><th>Country</th><td>{{ ln.country }}</td></tr>{% endif %}
+      {% if ln.aliases %}<tr><th>Aliases</th><td>{{ ln.aliases|join(", ") }}</td></tr>{% endif %}
+    </table>
+
+    <h2>Synopsis</h2>
+    <div class="description">{{ ln.description|safe if ln.description else "No description on AniList." }}</div>
+
+    <h2>Tags {% if ln.tag_groups %}<label class="spoil-toggle"><input type="checkbox" id="show-spoilers"> show spoilers</label>{% endif %}</h2>
+    {% for g in ln.tag_groups %}
+      <div class="tag-group"><span class="tag-cat">{{ g.label }}</span>
+        {% for t in g.tags %}<a class="tag {% if t.spoiler %}spoiler-tag{% endif %} {% if loop.index > 30 %}extra{% endif %}" href="{{ t.url }}" target="_blank" rel="noopener" title="{% if t.rating %}{{ t.rating }}% relevant{% endif %}{% if t.spoiler %} · spoiler{% endif %}">{{ t.name }}</a>{% endfor %}
+        {% if g.tags|length > 30 %}<button class="all-tags">show all {{ g.tags|length }}</button>{% endif %}
+      </div>
+    {% else %}<p class="muted">No tags.</p>{% endfor %}
+    {% if not mature %}<p class="muted small">Sexual-content tags are hidden (Mature content is off).</p>{% endif %}
+
+    {% if ln.relations %}
+      <h2>Related</h2>
+      <div class="relations">
+        {% for r in ln.relations %}
+          <a class="rel" href="{{ '/ln/' ~ r.id ~ q if r.id else r.url }}"{% if not r.id %} target="_blank" rel="noopener"{% endif %}>
+            <div class="cover {% if r.blur %}blur{% endif %}">{% if r.cover %}<img src="{{ r.cover }}" alt="" loading="lazy" referrerpolicy="no-referrer">{% else %}<div class="placeholder">no cover</div>{% endif %}</div>
+            <div class="rel-info"><span class="muted">{{ r.relation }}{% if r.year %} · {{ r.year }}{% endif %}</span><br>{{ r.title }}{% if not r.id %} ↗{% endif %}</div>
+          </a>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+</main>
+
+<script>
+  document.getElementById("back").addEventListener("click", (e) => {
+    if (history.length > 1) { e.preventDefault(); history.back(); }
+  });
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest(".blur, .spoiler:not(.shown)");
+    if (!b) return;
+    e.preventDefault();
+    b.classList.remove("blur");
+    b.classList.add("shown");
+  });
+  document.querySelectorAll(".all-tags").forEach((b) => b.addEventListener("click", () => {
+    b.parentElement.classList.add("open"); b.remove();
+  }));
+  const sp = document.getElementById("show-spoilers");
+  if (sp) sp.addEventListener("change", () => document.body.classList.toggle("spoilers", sp.checked));
+</script>
+</body>
+</html>
