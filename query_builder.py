@@ -49,6 +49,8 @@ def criterion_filter(c: Criterion, cfg: dict):
         if ex:   # NOT (a AND b) = (NOT a) OR (NOT b)
             return _or([["released", _INVERT[op], d] for op, d in c.value])
         return _and([["released", op, d] for op, d in c.value])
+    if c.kind == "title":   # VNDB's own title search (titles, aliases, release titles)
+        return ["search", "=", str(c.value)[:200]]   # never an exclusion
     if c.kind in ("length", "rating", "votecount"):
         op = c.op if c.kind == "length" else (c.op or ">=")
         return [c.kind, _INVERT[op] if ex else op, c.value]

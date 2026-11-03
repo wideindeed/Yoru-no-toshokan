@@ -154,10 +154,35 @@ $("grid").addEventListener("click", async (e) => {
   if (cov) { e.preventDefault(); cov.classList.remove("blur"); }   // first click reveals, second opens
 });
 
+
+// ---------------------------------------------------------------- title search
+function titleSearch(t) {
+  t = t.trim();
+  if (!t) return;
+  $("welcome").hidden = true;
+  $("report").innerHTML = "";
+  Object.assign(state, { criteria: [{ kind: "title", value: t, label: "Title: " + t, exclude: false,
+                                      phrase: t, method: "title search", display: "Title: " + t }],
+                         unmatched: [], skip: [] });
+  renderChips();
+  search(1);
+}
+// one bar, two ways to search: "describe" (the parser) or "title" (VNDB title search)
+const PLACEHOLDER = { describe: $("q").placeholder, title: "a title, e.g. Ever17 or Steins;Gate" };
+let searchBy = "describe";
+function setBy(by) {
+  searchBy = by;
+  document.querySelectorAll("#search-form .by button").forEach((b) => b.classList.toggle("on", b.dataset.by === by));
+  $("q").placeholder = PLACEHOLDER[by];
+}
+document.querySelectorAll("#search-form .by button").forEach((b) => b.addEventListener("click", () => { setBy(b.dataset.by); $("q").focus(); }));
+
 $("search-form").addEventListener("submit", (e) => {
   e.preventDefault();
-  history.replaceState(null, "", "/?q=" + encodeURIComponent($("q").value));
-  parseAndSearch($("q").value, $("llm").checked);
+  const q = $("q").value.trim();
+  history.replaceState(null, "", "/" + (searchBy === "title" ? "?title=" : "?q=") + encodeURIComponent(q));
+  if (searchBy === "title") titleSearch(q);
+  else parseAndSearch(q, $("llm").checked);
 });
 // editing the rewritten line re-parses it directly (no second LLM pass)
 $("rewritten").addEventListener("keydown", (e) => {
@@ -209,7 +234,7 @@ fetch("/api/prefs").then((r) => r.json()).then((p) => { prefs = p; renderPrefs()
 // keep the search when opening a detail page, so Back returns to the same grid and scroll
 window.addEventListener("pagehide", () => {
   sessionStorage.setItem("search", JSON.stringify({ url: location.search,
-    q: $("q").value, rewritten: $("rewritten").value, rewrittenShown: !$("rewritten-row").hidden,
+    q: $("q").value, by: searchBy, rewritten: $("rewritten").value, rewrittenShown: !$("rewritten-row").hidden,
     note: $("llm-note").textContent, report: $("report").innerHTML, state,
     grid: $("grid").innerHTML, status: $("status").textContent, more: !$("more").hidden,
     sort: $("sort").value, mode: $("mode").value, scroll: window.scrollY,
@@ -218,6 +243,8 @@ window.addEventListener("pagehide", () => {
 (function restore() {
   const saved = JSON.parse(sessionStorage.getItem("search") || "null");
   const urlQ = new URLSearchParams(location.search).get("q");
+  const urlT = new URLSearchParams(location.search).get("title");
+  if (urlT && (!saved || saved.by !== "title" || saved.q !== urlT)) { setBy("title"); $("q").value = urlT; titleSearch(urlT); return; }
   if (urlQ && (!saved || saved.q !== urlQ)) {   // /?q=... runs that search (bookmarkable)
     $("q").value = urlQ;
     parseAndSearch(urlQ, $("llm").checked);
@@ -226,7 +253,7 @@ window.addEventListener("pagehide", () => {
   if (!saved || !saved.grid) return;
   $("welcome").hidden = true;
   Object.assign(state, saved.state);
-  $("q").value = saved.q; $("sort").value = saved.sort; $("mode").value = saved.mode;
+  setBy(saved.by || "describe"); $("q").value = saved.q; $("sort").value = saved.sort; $("mode").value = saved.mode;
   $("rewritten").value = saved.rewritten; $("rewritten-row").hidden = !saved.rewrittenShown;
   $("llm-note").textContent = saved.note; $("report").innerHTML = saved.report;
   renderChips();

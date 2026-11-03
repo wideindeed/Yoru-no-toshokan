@@ -96,6 +96,9 @@ Filler words ("I want", "looking for", "ideally", "please") are skipped.
 - **Match: all tags** demands everything you asked for. **Any tag** is looser
   and puts titles that hit the most of your tags first.
 - Click **×** on any label to drop it, and the search runs again.
+- Already know the name? Switch the bar from **Describe** to **Title** and type
+  it (e.g. *Ever17*). It searches titles, aliases and release titles, and you
+  can still narrow the results with Browse tags.
 - **Browse tags** under the search bar finds any VNDB tag by name, nickname or
   description (typos are fine). **+** adds it to the search, **−** excludes it.
   Click a red "not understood" label to look those words up there.

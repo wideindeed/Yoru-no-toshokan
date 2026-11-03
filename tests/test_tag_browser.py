@@ -24,3 +24,10 @@ def test_name_alias_description_and_typos():
 def test_ero_filter_and_markup():
     assert names("nukige") == ["Nukige"] and names("nukige", include_ero=False) == []
     assert plain("a [url=https://x]b[/url] [spoiler]c[/spoiler]") == "a b c"
+
+
+def test_title_criterion_filter():
+    from parsing.model import Criterion
+    import query_builder as qb
+    c = Criterion.from_dict({"kind": "title", "value": "Ever17", "label": "Title: Ever17"})
+    assert qb.criterion_filter(c, {}) == ["search", "=", "Ever17"]

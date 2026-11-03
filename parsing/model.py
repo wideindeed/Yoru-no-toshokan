@@ -15,7 +15,7 @@ from typing import Any
 #   rating     int 10..100         (op: ">=")
 #   votecount  int                 (op: ">=")
 KINDS = {"tag", "tag_any", "lang", "platform", "engine", "length",
-         "released", "rating", "votecount"}
+         "released", "rating", "votecount", "title"}
 
 
 @dataclass

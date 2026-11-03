@@ -196,15 +196,41 @@ $("grid").addEventListener("click", (e) => {
   if (cov) { e.preventDefault(); cov.classList.remove("blur"); }   // first click reveals, second opens
 });
 
+
+// ---------------------------------------------------------------- title search
+function titleSearch(t) {
+  t = t.trim();
+  if (!t) return;
+  $("welcome").hidden = true;
+  $("report").innerHTML = "";
+  Object.assign(state, { criteria: [{ kind: "title", value: t, label: "Title: " + t, exclude: false,
+                                      phrase: t, method: "title search", display: "Title: " + t }],
+                         unmatched: [], skip: [], notes: [] });
+  renderChips();
+  search(1);
+}
+// one bar, two ways to search: "describe" (the parser) or "title" (VNDB title search)
+const PLACEHOLDER = { describe: $("q").placeholder, title: "a title, e.g. Ever17 or Steins;Gate" };
+let searchBy = "describe";
+function setBy(by) {
+  searchBy = by;
+  document.querySelectorAll("#search-form .by button").forEach((b) => b.classList.toggle("on", b.dataset.by === by));
+  $("q").placeholder = PLACEHOLDER[by];
+}
+document.querySelectorAll("#search-form .by button").forEach((b) => b.addEventListener("click", () => { setBy(b.dataset.by); $("q").focus(); }));
+
 $("search-form").addEventListener("submit", (e) => {
   e.preventDefault();
-  history.replaceState(null, "", location.pathname + "?q=" + encodeURIComponent($("q").value));
-  parseAndSearch($("q").value);
+  const q = $("q").value.trim();
+  history.replaceState(null, "", location.pathname + (searchBy === "title" ? "?title=" : "?q=") + encodeURIComponent(q));
+  if (searchBy === "title") titleSearch(q);
+  else parseAndSearch(q);
 });
 ["sort", "mode"].forEach((id) => $(id).addEventListener("change", () => { if (state.criteria.length || $("grid").children.length) search(1); }));
 $("more").addEventListener("click", () => search(state.page + 1));
 document.querySelectorAll(".try").forEach((b) => b.addEventListener("click", () => {
   $("q").value = b.textContent;
+  setBy("describe");
   $("search-form").requestSubmit();
 }));
 
@@ -366,6 +392,8 @@ renderPrefs();
 let booted = false;
 const urlQ = new URLSearchParams(location.search).get("q");
 if (location.hash) route();
-if (urlQ) { $("q").value = urlQ; parseAndSearch(urlQ); }
+const urlT = new URLSearchParams(location.search).get("title");
+if (urlT) { setBy("title"); $("q").value = urlT; titleSearch(urlT); }
+else if (urlQ) { $("q").value = urlQ; parseAndSearch(urlQ); }
 booted = true;
 py.catch((e) => { $("status").textContent = "Could not start the search engine: " + e.message; });
