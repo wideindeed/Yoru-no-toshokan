@@ -2,6 +2,11 @@
 
 *The night library. Visual novels, after hours.*
 
+### ▶ Try it online: **[wideindeed.github.io/Yoru-no-toshokan](https://wideindeed.github.io/Yoru-no-toshokan/)**
+
+Nothing to install; it runs in your browser and is all ages only. For adult
+titles and the extras below, [run it on your own computer](#getting-started).
+
 Tell it what you're in the mood for, the way you'd say it to a friend, and it
 finds matching visual novels on [VNDB](https://vndb.org):
 
@@ -11,8 +16,8 @@ finds matching visual novels on [VNDB](https://vndb.org):
 >
 > I'd love something about vampires made in RPG Maker, but no horror, ideally after 2015
 
-No tag pickers and no fifty-checkbox filter forms. It runs on your own computer,
-it's free, and it needs no account.
+No tag pickers and no fifty-checkbox filter forms. Use it [online](https://wideindeed.github.io/Yoru-no-toshokan/) or run
+it on your own computer. It's free, and it needs no account.
 
 ![Search results](docs/screenshots/results.png)
 
@@ -179,6 +184,8 @@ python cli.py --refresh-tags         # re-download the tag list now
 ```
 
 ## Web version
+
+Live at **<https://wideindeed.github.io/Yoru-no-toshokan/>**.
 
 `web/` is a browser-only version for GitHub Pages: no server, and each visitor's
 browser talks to VNDB directly. The same parser runs in the page through
