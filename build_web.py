@@ -20,6 +20,7 @@ PY_FILES = ["settings.py", "config.yaml", "query_builder.py", "details.py",
             "vndb/__init__.py", "vndb/tags.py", "vndb/labels.py"]
 WEB_PY = ["web.py", "rapidfuzz/__init__.py", "rapidfuzz/fuzz.py", "rapidfuzz/process.py"]
 STATIC = {"web/index.html": "index.html", "web/about.html": "about.html", "web/app.js": "app.js", "static/tagbrowser.js": "tagbrowser.js",
+          "static/favicon.svg": "favicon.svg",
           "static/style.css": "style.css", "web/web.css": "web.css", "LICENSE": "LICENSE.txt"}
 
 
