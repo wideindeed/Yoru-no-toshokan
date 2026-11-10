@@ -41,7 +41,7 @@ _NEG_ANY_RE = re.compile(
 # the scanner tries whole word windows before dropping stopwords.
 STOPWORDS = set("""
 a an the some any this these those such
-i me my mine i'd i'm i've id im ive we us our you your it its it's they them their there here
+i me my mine he him his she her hers i'd i'm i've id im ive we us our you your it its it's they them their there here
 is are was were be been being am do does did done have has had having get got
 want wants wanted wanting would could should can will must might may shall
 like likes liked love loved prefer need needs needed wish hope hoping
@@ -57,6 +57,7 @@ game games vn vns visual novel novels title titles story stories plot read reads
 setting set themes theme elements element vibe vibes feel feeling atmosphere
 made using built engine version
 oh ah uh um hmm well yeah yes ok okay too much many more bit little
+few see world main character characters protagonist
 """.split())
 
 # Kept for edge-stripping whole phrases (older, more conservative list).
@@ -236,6 +237,9 @@ def _wb(p: str) -> re.Pattern:
     return re.compile(r"(?<![\w'])(?:" + p + r")(?![\w'])", re.I)
 
 
+_LENGTH_NOUN_RE = _wb(r"(very short|very long|short|long)\s+(?:games?|vns?|visual novels?|reads?)")
+
+
 _LANG_RE = _wb(
     r"(?:in\s+|translated\s+(?:to|into)\s+)?("
     + "|".join(re.escape(k) for k in sorted(LANGUAGES, key=len, reverse=True))
@@ -370,5 +374,11 @@ def extract(phrase: str, cfg: dict, exclude: bool = False) -> RuleOutput:
         n = LENGTHS[m.group(1).lower()]
         add("length", n, f"Length: {LENGTH_LABELS[n]}")
         text = ""
+    # ...or a length word naming the game itself inside a longer phrase
+    # ("a short visual novel I can finish fast"); "short hair" still isn't one.
+    elif m := _LENGTH_NOUN_RE.search(text):
+        n = LENGTHS[m.group(1).lower()]
+        add("length", n, f"Length: {LENGTH_LABELS[n]}")
+        text = cut(m)
 
     return RuleOutput(out, re.sub(r"\s+", " ", text).strip())

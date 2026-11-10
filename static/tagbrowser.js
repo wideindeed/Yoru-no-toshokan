@@ -1,14 +1,25 @@
 // Tag browser widget, shared by the desktop and web pages.
-//   const tb = mountTagBrowser(rootElement, { search: async (q) => rows, onPick: (row, exclude) => {} });
+//   const tb = mountTagBrowser(rootElement, { search: async (q) => rows, onPick: (row, exclude) => {},
+//                                             related: async (q) => rows });   // related is optional
 //   tb.open("some text")   // fill the box and search
-// rows: [{id, name, category, vn_count, why, description}] from parsing/tag_browser.py
-function mountTagBrowser(root, { search, onPick }) {
+// rows: [{id, name, category, vn_count, why, description}] from parsing/tag_browser.py;
+// related rows (static/related.js) are listed after them under "Close in meaning".
+function mountTagBrowser(root, { search, onPick, related }) {
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   root.innerHTML = `<input class="tb-q" type="search" autocomplete="off" aria-label="Find a tag"
       placeholder="find a tag by name, nickname or description (typos are fine)">
     <div class="tb-list"></div>`;
   const input = root.querySelector(".tb-q"), list = root.querySelector(".tb-list");
   let rows = [], timer = null, seq = 0;
+
+  const row = (t, i) => `<div class="tb-row">
+      <button class="tb-add" data-i="${i}" title="Add to the search" aria-label="Add ${esc(t.name)}">+</button>
+      <button class="tb-ex" data-i="${i}" title="Exclude from the search" aria-label="Exclude ${esc(t.name)}">−</button>
+      <span class="tb-main">${tagLink(t)}
+        <span class="tb-n">${[/^g\d/.test(t.id) ? `${t.vn_count} VNs` : t.id.startsWith("genre:") ? "genre" : "",
+                              t.category === "tech" ? "technical" : "", esc(t.why || "")].filter(Boolean).join(" · ")}</span>
+        ${t.description ? `<span class="tb-desc">${esc(t.description)}</span>` : ""}</span>
+    </div>`;
 
   async function run() {
     const q = input.value.trim(), my = ++seq;
@@ -17,17 +28,24 @@ function mountTagBrowser(root, { search, onPick }) {
       const found = await search(q);
       if (my !== seq) return;                      // a newer search has started
       rows = found;
-      list.innerHTML = rows.map((t, i) => `<div class="tb-row">
-          <button class="tb-add" data-i="${i}" title="Add to the search" aria-label="Add ${esc(t.name)}">+</button>
-          <button class="tb-ex" data-i="${i}" title="Exclude from the search" aria-label="Exclude ${esc(t.name)}">−</button>
-          <span class="tb-main">${tagLink(t)}
-            <span class="tb-n">${[/^g\d/.test(t.id) ? `${t.vn_count} VNs` : t.id.startsWith("genre:") ? "genre" : "",
-                                  t.category === "tech" ? "technical" : "", esc(t.why || "")].filter(Boolean).join(" · ")}</span>
-            ${t.description ? `<span class="tb-desc">${esc(t.description)}</span>` : ""}</span>
-        </div>`).join("") || `<em class="tb-none">No tag matches "${esc(q)}".</em>`;
+      list.innerHTML = rows.map(row).join("") || (related ? "" : `<em class="tb-none">No tag matches "${esc(q)}".</em>`);
     } catch (e) {
       if (my === seq) list.innerHTML = `<em class="tb-none">Error: ${esc(e.message)}</em>`;
+      return;
     }
+    // tags close in meaning, for phrases and for words whose names found little:
+    // the model takes a few seconds (and ~23 MB) the first time
+    if (!related || q.length < 3 || (rows.length >= 3 && !q.includes(" "))) return;
+    list.insertAdjacentHTML("beforeend", `<em class="tb-none tb-rel">Looking for tags close in meaning…</em>`);
+    let more;
+    try { more = await related(q); } catch { more = null; }
+    if (my !== seq) return;
+    const have = new Set(rows.map((t) => t.id)), start = rows.length;
+    more = (more || []).filter((t) => !have.has(t.id));
+    rows = rows.concat(more);
+    list.querySelector(".tb-rel").outerHTML = more.length
+      ? `<p class="tb-head">Close in meaning</p>` + more.map((t, i) => row(t, start + i)).join("")
+      : start ? "" : `<em class="tb-none">No tag matches "${esc(q)}".</em>`;
   }
 
   input.addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(run, 200); });

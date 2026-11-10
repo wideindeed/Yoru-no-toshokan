@@ -158,6 +158,7 @@ const tags = mountTagBrowser($("tag-browser"), {
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     return r.json();
   },
+  related: (q) => relatedTags(q, { base: "/static/vectors/", src: state.source, ero: $("mature").checked }),
   onPick(t, exclude) {
     const w = $("welcome"); if (w) w.hidden = true;
     state.criteria = state.criteria.filter((c) => !(c.kind === "tag" && c.value === t.id));   // + then − flips it

@@ -5,7 +5,7 @@ fuzzy_threshold: 85          # rapidfuzz score (0-100) needed to accept a fuzzy 
 use_embeddings: false        # optional MiniLM semantic matcher (needs sentence-transformers)
 embedding_threshold: 0.60    # cosine similarity needed for an embedding match
                              # (MiniLM guesses are loose; matches show as "embedding" in --explain)
-fuzzy_min_sort_ratio: 80     # guard: token_set_ratio gives 100 for any word subset
+fuzzy_min_sort_ratio: 85     # guard: token_set_ratio gives 100 for any word subset
                              # ("horror" vs "Body Horror"), so also require this
                              # token_sort_ratio before accepting a fuzzy hit
 

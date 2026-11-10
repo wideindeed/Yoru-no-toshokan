@@ -209,6 +209,7 @@ $("chips").addEventListener("click", (e) => {
 let lookingUp = null;           // an unmatched phrase being looked up; replaced by the tag picked
 const tags = mountTagBrowser($("tag-browser"), {
   search: (q) => call(fn("tags"), q),
+  related: (q) => relatedTags(q, { base: "vectors/", src: state.source, ero: false }),   // all ages
   onPick(t, exclude) {
     $("welcome").hidden = true;
     state.criteria = state.criteria.filter((c) => !(c.kind === "tag" && c.value === t.id));   // + then − flips it

@@ -3,6 +3,9 @@
 Embeddings of "tag name; aliases" are computed once and cached in
 data/tag_embeddings.npy (rebuilt automatically when the tag list changes).
 Uses CUDA when available, otherwise CPU.
+
+    python -m parsing.embed     # (re)write static/vectors/ for the "close in meaning"
+                                # suggestions in the tag browser (desktop and web)
 """
 from __future__ import annotations
 
@@ -55,9 +58,38 @@ class EmbeddingMatcher:
         META_PATH.write_text(json.dumps({"digest": digest, "model": MODEL_NAME}))
         return vecs
 
+    def export_for_browser(self, stem) -> None:
+        """Tag vectors for static/related.js, which suggests tags close in meaning in the
+        browser with the same model (transformers.js). <stem>.bin is int8 rows (vector * 127),
+        <stem>.json lists [id, name, category, count] per row."""
+        keep = [i for i, tid in enumerate(self.ids)
+                if self.index.tags[tid].searchable and "(obsolete)" not in self.index.tags[tid].name]
+        stem.parent.mkdir(parents=True, exist_ok=True)
+        np.round(self.vectors[keep] * 127).astype(np.int8).tofile(stem.with_suffix(".bin"))
+        rows = [[t.id, t.name, t.category, t.vn_count] for t in (self.index.tags[self.ids[i]] for i in keep)]
+        stem.with_suffix(".json").write_text(json.dumps(
+            {"model": MODEL_NAME, "dim": int(self.vectors.shape[1]), "tags": rows}, ensure_ascii=False,
+            separators=(",", ":")), encoding="utf-8")
+
     def match(self, text: str, top_k: int = 1) -> list[tuple[str, float]]:
         """[(tag_id, cosine similarity)], best first."""
         q = self._encode([text])[0]
         sims = self.vectors @ q
         best = np.argsort(-sims)[:top_k]
         return [(self.ids[i], float(sims[i])) for i in best]
+
+
+if __name__ == "__main__":
+    from anilist import tags as al_tags
+    from settings import ROOT, load_config
+    from vndb.tags import load_tag_index
+    cfg = load_config()
+    vn = EmbeddingMatcher(load_tag_index(), cfg)
+    vn.export_for_browser(ROOT / "static" / "vectors" / "vn")
+    # AniList tags get their own vectors; they aren't cached in data/ (small, quick to encode)
+    ln = EmbeddingMatcher.__new__(EmbeddingMatcher)
+    ln.index, ln.model = al_tags.load_tag_index(), vn.model
+    ln.ids = sorted(ln.index.tags)
+    ln.vectors = ln._encode([_tag_text(ln.index.tags[i]) for i in ln.ids])
+    ln.export_for_browser(ROOT / "static" / "vectors" / "ln")
+    print("wrote static/vectors/vn.* and ln.*")

@@ -71,7 +71,80 @@ phrases:
   time loops:               { tag: "Time Loop" }
   yuri:                     { tag: "Girl x Girl Romance", ln: "Yuri" }
   bl:                       { tag: "Boy x Boy Romance", ln: "Boys' Love" }
+  girls in love:            { tag: "Girl x Girl Romance", ln: "Yuri" }
+  two girls in love:        { tag: "Girl x Girl Romance", ln: "Yuri" }
+  boys in love:             { tag: "Boy x Boy Romance", ln: "Boys' Love" }
+  two boys in love:         { tag: "Boy x Boy Romance", ln: "Boys' Love" }
   otome:                    { tag: "Otome Game" }
+
+  # --- mood: how people describe a story --------------------------------
+  # VNDB names these with Japanese genre words (Nakige, Utsuge). It has no tag
+  # for "cozy" or "wholesome", so those point at the nearest real ones.
+  sad:                      { tag: "Nakige", ln: "Tragedy" }
+  sad story:                { tag: "Nakige", ln: "Tragedy" }
+  makes me cry:             { tag: "Nakige", ln: "Tragedy" }
+  make me cry:              { tag: "Nakige", ln: "Tragedy" }
+  cry:                      { tag: "Nakige", ln: "Tragedy" }
+  crying:                   { tag: "Nakige", ln: "Tragedy" }
+  tearjerker:               { tag: "Nakige", ln: "Tragedy" }
+  emotional:                { tag: "Nakige", ln: "Drama" }
+  tragic:                   { tag: "Utsuge", ln: "Tragedy" }
+  depressing:               { tag: "Utsuge", ln: "Tragedy" }
+  bleak:                    { tag: "Utsuge", ln: "Tragedy" }
+  grim:                     { tag: "Utsuge", ln: "Tragedy" }
+  cozy:                     { tag: "Slice of Life", ln: "Iyashikei" }
+  cosy:                     { tag: "Slice of Life", ln: "Iyashikei" }
+  comfy:                    { tag: "Slice of Life", ln: "Iyashikei" }
+  relaxing:                 { tag: "Slice of Life", ln: "Iyashikei" }
+  chill:                    { tag: "Slice of Life", ln: "Iyashikei" }
+  laid back:                { tag: "Slice of Life", ln: "Iyashikei" }
+  heartwarming:             { tag: "Only Good Endings", ln: "Iyashikei" }
+  feel good:                { tag: "Only Good Endings", ln: "Iyashikei" }
+  feel-good:                { tag: "Only Good Endings", ln: "Iyashikei" }
+  wholesome:                { content: all_ages, ln: "Iyashikei" }
+  happy ending:             { tag: "Only Good Endings" }
+  happy endings:            { tag: "Only Good Endings" }
+  good ending:              { tag: "Only Good Endings" }
+  bad ending:               { tag: "Only Bad Endings" }
+  bad endings:              { tag: "Only Bad Endings" }
+  scary:                    { tag: "Horror", ln: "Horror" }
+  creepy:                   { tag: "Horror", ln: "Horror" }
+  spooky:                   { tag: "Horror", ln: "Horror" }
+  frightening:              { tag: "Horror", ln: "Horror" }
+  terrifying:               { tag: "Horror", ln: "Horror" }
+  mind-bending:             { tag: "Mind Screw", ln: "Psychological" }
+  mind bending:             { tag: "Mind Screw", ln: "Psychological" }
+  mindfuck:                 { tag: "Mind Screw", ln: "Psychological" }
+  confusing plot:           { tag: "Mind Screw", ln: "Psychological" }
+
+  # --- everyday words for common tags -----------------------------------
+  grief:                    { tag: "Mourning" }
+  loss:                     { tag: "Mourning" }
+  mourning:                 { tag: "Mourning" }
+  depression:               { tag: "Clinical Depression", ln: "Psychological" }
+  mental health:            { tag: "Psychological Problems", ln: "Psychological" }
+  mental illness:           { tag: "Psychological Problems", ln: "Psychological" }
+  memory:                   { tag: "Amnesia", ln: "Amnesia" }   # VNDB's alias "Memory" is a card game
+  memory loss:              { tag: "Amnesia", ln: "Amnesia" }
+  lost memories:            { tag: "Amnesia", ln: "Amnesia" }
+  childhood friend:         { any_tags: ["Protagonist's Childhood Friend as a Heroine", "Protagonist's Childhood Friend as a Hero", "Protagonist's Childhood Friend as a Support Character"] }
+  childhood friends:        { any_tags: ["Protagonist's Childhood Friend as a Heroine", "Protagonist's Childhood Friend as a Hero", "Protagonist's Childhood Friend as a Support Character"] }
+  feudal japan:             { any_tags: ["Sengoku Period", "Edo Era", "Fictional Medieval Japan"] }
+  sengoku:                  { tag: "Sengoku Period" }
+  historical japan:         { tag: "Past Japan" }
+  gothic:                   { tag: "Gothic Fiction" }
+  gothic mansion:           { tag: "Gothic Fiction" }
+  post apocalyptic:         { tag: "Post Apocalyptic Earth", ln: "Post-Apocalyptic" }
+  post-apocalyptic:         { tag: "Post Apocalyptic Earth", ln: "Post-Apocalyptic" }
+  apocalypse:               { tag: "Apocalypse", ln: "Post-Apocalyptic" }
+  end of the world:         { tag: "Apocalypse", ln: "Post-Apocalyptic" }
+  survivors:                { tag: "Survival Focus", ln: "Survival" }
+  survival:                 { tag: "Survival Focus", ln: "Survival" }
+  detective:                { tag: "Detective Work", ln: "Detective" }
+  detectives:               { tag: "Detective Work", ln: "Detective" }
+  superpowers:              { tag: "Superpowers", ln: "Super Power" }
+  super powers:             { tag: "Superpowers", ln: "Super Power" }
+  supernatural battles:     { tag: ["Superpowers", "Fighting Protagonist"], ln: { tag: ["Super Power", "Action"] } }
 
   # --- light novels only (AniList names) ------------------------------
   harem:                    { ln: "Female Harem" }
@@ -160,6 +233,8 @@ content_levels:
 # Same targets as `phrases`. Use single quotes so backslashes survive.
 # ---------------------------------------------------------------------
 patterns:
+  - pattern: '(?:los(?:e|es|t|ing)|forg[eo]t(?:s|ten)?)\s+(?:(?:his|her|their|my|your|all|of)\s+)*memor(?:y|ies)'
+    tag: "Amnesia"
   - pattern: '(?:main\s+character|protagonist|protag|main\s+lead|lead|mc|hero)(?:\s+(?:is|being|should\s+be|must\s+be|would\s+be|has\s+to\s+be))?(?:\s+an?)?\s+(?:girl|woman|female|lady|gal)'
     tag: "Female Protagonist"
   - pattern: '(?:play(?:ing)?|playing)\s+as\s+(?:an?\s+)?(?:girl|woman|female|lady)'
