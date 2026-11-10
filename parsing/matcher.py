@@ -28,10 +28,12 @@ class Synonyms:
     """phrase (lowercase) -> list of Criterion templates."""
 
     def __init__(self, entries: dict[str, list[Criterion]], warnings: list[str],
-                 patterns: list[tuple[re.Pattern, list[Criterion]]] | None = None):
+                 patterns: list[tuple[re.Pattern, list[Criterion]]] | None = None,
+                 traits: dict[str, str] | None = None):
         self.entries = entries
         self.warnings = warnings
         self.patterns = patterns or []      # (compiled regex, criterion templates)
+        self.traits = traits or {}          # everyday word -> trait in VNDB's words ("nerdy" -> "otaku")
 
     def get(self, phrase: str) -> list[Criterion] | None:
         return self.entries.get(phrase.strip().lower())
@@ -145,7 +147,8 @@ class Synonyms:
         else:
             for w in warnings:
                 log("WARNING: " + w)
-        return cls(entries, warnings, patterns)
+        traits = {str(k).strip().lower(): str(v).strip().lower() for k, v in (raw.get("traits") or {}).items()}
+        return cls(entries, warnings, patterns, traits)
 
 
 # ------------------------------------------------------------------ matcher
@@ -166,6 +169,17 @@ def _gender_compatible(query: str, text: str) -> bool:
 ROLE_SUFFIXES = ["support characters", "support character", "love interests", "love interest",
                  "protagonists", "protagonist", "antagonists", "antagonist",
                  "heroines", "heroine", "heroes", "hero"]
+
+
+#  Who a description is about. VNDB names character traits per role: "Short Heroine",
+#  "Heroine with Glasses", "Otaku Protagonist", "Protagonist's Kouhai as a Heroine".
+ROLES = ("heroine", "hero", "protagonist")
+ROLE_OF = {**dict.fromkeys("girl girls heroine heroines she woman women lady waifu girlfriend".split(), "heroine"),
+           **dict.fromkeys("guy guys boy boys hero heroes he man men husbando boyfriend".split(), "hero"),
+           **dict.fromkeys("protagonist protagonists mc protag".split(), "protagonist")}
+_ROLE_NAME_RES = [re.compile(r"^protagonist's (?P<base>.+) as an? (?P<role>heroine|hero)$"),
+                  re.compile(r"^(?P<role>heroine|hero|protagonist) with (?P<base>.+)$"),
+                  re.compile(r"^(?P<base>.+) (?P<role>heroine|hero|protagonist)$")]
 
 
 #  A shared long word inflates whole-string scores: "cheerful heroine" vs
@@ -230,6 +244,16 @@ class TagMatcher:
                     break
         for ids in self.families.values():
             ids.sort(key=lambda i: -index.tags[i].vn_count)
+        # role traits: ("heroine", "short") -> Short Heroine, ("heroine", "glasses") -> Heroine with Glasses
+        self.roles: dict[tuple[str, str], str] = {}
+        for t in sorted(index.tags.values(), key=lambda t: t.vn_count):     # most popular wins
+            if not t.searchable:
+                continue
+            name = re.sub(r"\s*\(.*?\)$", "", t.name.lower())    # "(non-loli)"
+            for rx in _ROLE_NAME_RES:
+                if m := rx.match(name):
+                    self.roles[(m["role"], m["base"])] = t.id
+                    break
 
     def _tag_crit(self, tag_id: str) -> list[Criterion]:
         t = self.index.tags[tag_id]
@@ -269,7 +293,7 @@ class TagMatcher:
             t = self.index.lookup(c)
             if t:
                 return Match(self._tag_crit(t.id), "exact", 100.0, c)
-        for c in cands:
+        for c in cands + [self.syn.traits[c] for c in cands if c in self.syn.traits]:
             ids = self.families.get(c)
             if ids:
                 if len(ids) == 1:
@@ -278,6 +302,17 @@ class TagMatcher:
                 roles = [t.name[len(c) + 1:] for t in tags]
                 label = f"{tags[0].name[:len(c)]}: " + " / ".join(roles)
                 return Match([Criterion("tag_any", ids, label)], "family", 100.0, c)
+        return None
+
+    def lookup_role(self, text: str, role: str) -> Match | None:
+        """A trait of the person being described: ("short", "heroine") -> Short Heroine."""
+        base = text.strip().lower()
+        if base not in self.syn.traits and singular(base) != base and singular(base) in self.families:
+            return None     # "some maids" are maid characters, not the heroine's job
+        for c in dict.fromkeys([base, singular(base)]):
+            for key in (c, self.syn.traits.get(c)):
+                if key and (tid := self.roles.get((role, key))):
+                    return Match(self._tag_crit(tid), "role", 100.0, c)
         return None
 
     def lookup_fuzzy(self, phrase: str) -> Match | None:

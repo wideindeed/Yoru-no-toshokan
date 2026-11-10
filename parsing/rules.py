@@ -290,7 +290,8 @@ def _date_label(lo, hi) -> str:
     return f"Released {hi} or earlier"
 
 
-def extract(phrase: str, cfg: dict, exclude: bool = False) -> RuleOutput:
+def extract(phrase: str, cfg: dict, exclude: bool = False, person: bool = False) -> RuleOutput:
+    """person: the clause describes someone, so a bare "short" is their height, not the length."""
     out: list[Criterion] = []
     text = phrase
 
@@ -370,6 +371,8 @@ def extract(phrase: str, cfg: dict, exclude: bool = False) -> RuleOutput:
     # length: only when (nearly) the whole remaining phrase is a length word,
     # so "long hair" or "short story collection" are left for the tag matcher.
     m = _LENGTH_RE.match(strip_filler(text))
+    if m and person and m.group(0).lower() == m.group(1).lower():
+        m = None
     if m:
         n = LENGTHS[m.group(1).lower()]
         add("length", n, f"Length: {LENGTH_LABELS[n]}")

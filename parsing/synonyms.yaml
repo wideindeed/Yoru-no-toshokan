@@ -249,3 +249,66 @@ patterns:
     tag: "Male Protagonist"
   - pattern: '(?:lots\s+of|many|several|different|multiple)\s+(?:possible\s+)?(?:endings|outcomes)'
     tag: "Multiple Endings"
+
+# ---------------------------------------------------------------------------
+# traits: everyday words for a character trait, in VNDB's words, for any role.
+# When a sentence is about someone ("a girl that is short, kind of nerdy"),
+# each word is tried as that person's trait: "<trait> Heroine", "Heroine with
+# <trait>" (or Hero / Protagonist). Names VNDB already uses ("short", "glasses",
+# "tsundere", "maid", "flat chest") need no entry here.
+traits:
+  nerdy: otaku
+  nerd: otaku
+  geek: otaku
+  geeky: otaku
+  flat chested: flat chest
+  flat-chested: flat chest
+  small chest: small breasts
+  small chested: small breasts
+  small breasted: small breasts
+  busty: big breasts
+  big chest: big breasts
+  big breasted: big breasts
+  large breasts: big breasts
+  fat: chubby
+  plump: chubby
+  thin: underweight
+  skinny: underweight
+  smart: genius
+  clever: genius
+  intelligent: genius
+  quiet: shy
+  introverted: shy
+  introvert: shy
+  cold: kuudere
+  stoic: emotionless
+  expressionless: emotionless
+  cheerful: energetic
+  bubbly: energetic
+  genki: energetic
+  ditzy: airhead
+  obsessive: yandere
+  rich: ojousama
+  wealthy: ojousama
+  tanned: dark skinned
+  tan: dark skinned
+  dark skin: dark skinned
+  white hair: white haired
+  twintails: twin tail
+  twin tails: twin tail
+  braid: a braid
+  braided: a braid
+  wears glasses: glasses
+  cat ears: nekomimi
+  magical girl: mahou shoujo
+  magical girls: mahou shoujo
+  cat girl: catgirl
+  fox girl: kitsune
+  bunny girl: rabbitgirl
+  dog girl: doggirl
+  android: robot
+  sick: sickly
+  ill: sickly
+  older sister type: oneesan-type
+  little sister type: imouto-type
+  rich girl: ojousama

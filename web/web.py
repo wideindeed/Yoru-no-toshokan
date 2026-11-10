@@ -48,7 +48,7 @@ def parse(text: str) -> str:
     keep = [c for c in res.criteria if not _adult(c)]
     return json.dumps({
         "criteria": [c.to_dict() for c in keep],
-        "unmatched": res.unmatched,
+        "unmatched": res.unmatched, "unmatched_role": res.unmatched_role,
         "notes": [ADULT_NOTE] if len(keep) < len(res.criteria) else [],
         "report": [{"phrase": r.phrase, "method": r.method, "score": r.score,
                     "got": [c.display for c in r.criteria]} for r in res.report],
@@ -132,7 +132,7 @@ def ln_parse(text: str) -> str:
     keep = [c for c in res.criteria if not _ln_adult(c)]
     return json.dumps({
         "criteria": [c.to_dict() for c in keep],
-        "unmatched": res.unmatched,
+        "unmatched": res.unmatched, "unmatched_role": res.unmatched_role,
         "notes": [ADULT_NOTE] if len(keep) < len(res.criteria) else [],
         "report": [{"phrase": r.phrase, "method": r.method, "score": r.score,
                     "got": [c.display for c in r.criteria]} for r in res.report],

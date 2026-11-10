@@ -44,7 +44,7 @@ def api_parse():
         return jsonify({"error": f"{API_NAME[source_of(body)]} API error: {e}"}), 502
     return jsonify({
         "criteria": [c.to_dict() for c in res.criteria],
-        "unmatched": res.unmatched,
+        "unmatched": res.unmatched, "unmatched_role": res.unmatched_role,
         "rewritten": rewritten,
         "note": note,
         "report": [{"phrase": r.phrase, "method": r.method, "score": r.score,

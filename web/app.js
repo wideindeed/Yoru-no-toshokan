@@ -158,7 +158,8 @@ async function parseAndSearch(text) {
   $("status").textContent = ready ? "Parsing..." : "Loading the search engine (the first visit takes a few seconds)...";
   try {
     const p = await call(fn("parse"), text);
-    Object.assign(state, { criteria: p.criteria, unmatched: p.unmatched, notes: p.notes, skip: [] });
+    Object.assign(state, { criteria: p.criteria, unmatched: p.unmatched, roles: p.unmatched_role || {},
+                           notes: p.notes, skip: [] });
     $("report").innerHTML = p.report.map((r) =>
       `<tr><td>${esc(r.phrase)}</td><td>${esc(r.method)}</td><td>${r.score.toFixed(0)}</td><td>${esc(r.got.join(", ") || "-")}</td></tr>`).join("");
     renderChips();
@@ -209,7 +210,8 @@ $("chips").addEventListener("click", (e) => {
 let lookingUp = null;           // an unmatched phrase being looked up; replaced by the tag picked
 const tags = mountTagBrowser($("tag-browser"), {
   search: (q) => call(fn("tags"), q),
-  related: (q) => relatedTags(q, { base: "vectors/", src: state.source, ero: false }),   // all ages
+  related: (q) => relatedTags(q, { base: "vectors/", src: state.source, ero: false,   // all ages
+                                   role: state.roles?.[q] }),
   onPick(t, exclude) {
     $("welcome").hidden = true;
     state.criteria = state.criteria.filter((c) => !(c.kind === "tag" && c.value === t.id));   // + then − flips it

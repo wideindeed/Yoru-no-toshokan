@@ -110,11 +110,11 @@ def test_length_word_inside_tag_phrase_is_not_length(parser):
 
 
 def test_fuzzy_guards_reject_lookalikes(parser):
-    # VNDB has no "Cheerful Heroine"; neighbours that only share "heroine"
+    # VNDB has no "Graceful Heroine"; neighbours that only share "heroine"
     # or differ in gender must not be accepted.
-    for q in ("cheerful heroine", "genki heroine"):
+    for q in ("graceful heroine", "polite heroine"):
         r = parser.parse(q)
-        assert r.criteria == [] and r.unmatched == [q], (q, [c.label for c in r.criteria])
+        assert r.criteria == [] and r.unmatched == [q.split()[0]], (q, [c.label for c in r.criteria])
 
 
 def test_gender_guard(parser):
@@ -201,3 +201,13 @@ def test_patterns_and_stopwords(parser):
     assert tag_ids(parser.parse("the protagonist should be a woman")) == {"g134"}
     r = parser.parse("ideally, please, I would like something")
     assert r.criteria == [] and r.unmatched == []
+
+
+def test_described_person_traits(parser):
+    # who a sentence is about carries over commas: traits become that person's tags
+    r = parser.parse("I want a girl that is short, with sunken eyes, flat chest, kind of nerdy. A long game")
+    assert tag_ids(r) == {"g3034", "g3437", "g188"}   # Short / Flat Chest / Otaku Heroine
+    assert crit(r, "length")[0].value == 4 and r.unmatched == ["sunken eyes"]
+    assert r.unmatched_role == {"sunken eyes": "heroine"}
+    r = parser.parse("the protagonist is a guy who is a hikikomori")
+    assert "Hikikomori Protagonist" in {c.label for c in r.criteria}

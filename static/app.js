@@ -93,6 +93,7 @@ async function parseAndSearch(text, useLlm) {
     const p = await post("/api/parse", { text, use_llm: useLlm, source: state.source });
     state.criteria = p.criteria;
     state.unmatched = p.unmatched;
+    state.roles = p.unmatched_role || {};
     state.skip = [];            // a new query brings back every always-exclude
     $("rewritten-row").hidden = !useLlm;
     $("rewritten").value = p.rewritten ?? "";
@@ -158,7 +159,8 @@ const tags = mountTagBrowser($("tag-browser"), {
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     return r.json();
   },
-  related: (q) => relatedTags(q, { base: "/static/vectors/", src: state.source, ero: $("mature").checked }),
+  related: (q) => relatedTags(q, { base: "/static/vectors/", src: state.source, ero: $("mature").checked,
+                                   role: state.roles?.[q] }),
   onPick(t, exclude) {
     const w = $("welcome"); if (w) w.hidden = true;
     state.criteria = state.criteria.filter((c) => !(c.kind === "tag" && c.value === t.id));   // + then − flips it

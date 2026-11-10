@@ -67,6 +67,7 @@ class ParseResult:
     text: str
     criteria: list[Criterion] = field(default_factory=list)
     unmatched: list[str] = field(default_factory=list)
+    unmatched_role: dict[str, str] = field(default_factory=dict)   # unmatched text -> who it described
     report: list[PhraseReport] = field(default_factory=list)
 
     def add(self, c: Criterion) -> bool:
