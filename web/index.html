@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="web.css">
 </head>
 <body>
+<a class="skip" href="#grid">Skip to results</a>
 <div id="search-view">
   <header>
     <a href="about.html" class="about-hang">
@@ -24,7 +25,7 @@
     <div class="by src-switch" role="group" aria-label="Library"><button type="button" data-src="vn" class="on">Visual novels</button><button type="button" data-src="ln">Light novels</button></div>
     <form id="search-form">
       <div class="by" role="group" aria-label="Search by"><button type="button" data-by="describe" class="on">Describe</button><button type="button" data-by="title">Title</button></div>
-      <input id="q" type="text" autocomplete="off" autofocus
+      <input id="q" type="text" autocomplete="off" autofocus aria-label="Search"
              placeholder="e.g. fantasy setting, english, RPG Maker, multiple endings, female lead">
       <button type="submit">Search</button>
     </form>
@@ -52,7 +53,7 @@
     <details id="prefs-panel"><summary>Preferences</summary>
       <div class="prefs">
         <div><h3>Always exclude</h3><div class="plist" id="ex-list"></div>
-          <form class="padd"><input placeholder="tag, e.g. Gore"><button>Add</button></form></div>
+          <form class="padd"><input aria-label="Tag to always exclude" placeholder="tag, e.g. Gore"><button>Add</button></form></div>
         <div><h3>Not interested</h3><div class="plist" id="hidden-list"></div></div>
       </div>
       <p class="pmsg-note">Saved in this browser only.</p>
@@ -74,9 +75,10 @@
       <li><button class="try">vampires, made in RPG Maker, no horror, after 2015</button></li>
     </ul>
   </div>
-  <p id="status"></p>
-  <main id="grid"></main>
+  <p id="status" role="status"></p>
+  <main id="grid" tabindex="-1"></main>
   <div id="more-row"><button id="more" hidden>Load more</button></div>
+  <div id="toast" role="status"></div>
 </div>
 
 <div id="vn-view" hidden>

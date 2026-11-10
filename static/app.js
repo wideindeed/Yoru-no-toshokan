@@ -25,7 +25,7 @@ function applySource(src) {
   const S = SRC[state.source];
   document.documentElement.dataset.src = state.source;
   localStorage.setItem("src", state.source);
-  document.querySelectorAll(".src-switch button").forEach((b) => b.classList.toggle("on", b.dataset.src === state.source));
+  pressed(".src-switch button", (b) => b.dataset.src === state.source);
   document.querySelector(".tagline").textContent = S.tagline;
   const ji = document.querySelector(".chochin .ji");
   if (ji) ji.textContent = isLN() ? "栞" : "灯";            // lantern (light) / bookmark
@@ -44,6 +44,42 @@ async function post(url, body) {
   if (!r.ok) throw new Error(data.error || r.statusText);
   return data;
 }
+
+// toggle-button groups: .on for the look, aria-pressed for screen readers
+function pressed(sel, isOn) {
+  document.querySelectorAll(sel).forEach((b) => { b.classList.toggle("on", isOn(b)); b.setAttribute("aria-pressed", isOn(b)); });
+}
+
+// "Not interested" acts at once; a short message offers Undo instead of asking first
+let toastTimer;
+function hideWithUndo(card, unhide) {
+  const grid = card.parentNode, next = card.nextElementSibling, t = $("toast");
+  const away = () => {     // the message goes; keep keyboard focus on the grid
+    if (t.contains(document.activeElement)) (next?.isConnected ? next.querySelector(".info a") : grid).focus();
+    t.innerHTML = "";
+  };
+  card.remove();
+  t.innerHTML = `Hidden: ${esc(card.dataset.title)} <button type="button">Undo</button>`;
+  t.querySelector("button").onclick = async () => {
+    clearTimeout(toastTimer);
+    if (await unhide() !== false && (!next || next.parentNode === grid)) { grid.insertBefore(card, next); card.querySelector(".info a").focus(); }
+    t.innerHTML = "";
+  };
+  t.querySelector("button").focus();
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(away, 7000);
+}
+
+// nothing found with every tag required: offer to rank by any tag instead
+const TRY_ANY = ' <button type="button" id="try-any">Match any tag instead</button>';
+$("status").addEventListener("click", (e) => {
+  if (e.target.id === "try-any") { $("mode").value = "any"; search(1); }
+});
+// the sticky header must not cover what has keyboard focus
+const head = document.querySelector("header");
+new ResizeObserver(() => {
+  document.documentElement.style.scrollPaddingTop = getComputedStyle(head).position === "sticky" ? head.offsetHeight + 12 + "px" : "";
+}).observe(head);
 
 function esc(s) {
   return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -73,9 +109,9 @@ async function parseAndSearch(text, useLlm) {
 function renderChips() {
   $("understood").hidden = false;
   const good = state.criteria.map((c, i) =>
-    `<span class="chip ${c.exclude ? "neg" : ""}" title="${esc(c.method)} from '${esc(c.phrase)}'">${esc(c.display)}<button data-i="${i}">×</button></span>`);
+    `<span class="chip ${c.exclude ? "neg" : ""}" title="${esc(c.method)} from '${esc(c.phrase)}'">${esc(c.display)}<button data-i="${i}" aria-label="Remove ${esc(c.display)}">×</button></span>`);
   const bad = state.unmatched.map((u, i) =>
-    `<span class="chip bad" data-find="${i}" title="not understood - click to look it up in Browse tags">${esc(u)}<button data-u="${i}">×</button></span>`);
+    `<span class="chip bad"><button class="find" data-find="${i}" title="not understood - click to look it up in Browse tags">${esc(u)}</button><button data-u="${i}" aria-label="Remove ${esc(u)}">×</button></span>`);
   $("chips").innerHTML = good.concat(bad).join("") || "<em>nothing</em>";
   renderAlways();
 }
@@ -84,7 +120,7 @@ function renderAlways() {
   const list = prefs.exclude[layer()].filter((t) => !state.skip.includes(t.id));
   $("always-row").hidden = !list.length;
   $("always").innerHTML = list.map((t) =>
-    `<span class="chip pref" title="from Preferences; × skips it for this search">NOT: ${esc(t.name)}<button data-skip="${esc(t.id)}">×</button></span>`).join("");
+    `<span class="chip pref" title="from Preferences; × skips it for this search">NOT: ${esc(t.name)}<button data-skip="${esc(t.id)}" aria-label="Skip ${esc(t.name)} for this search">×</button></span>`).join("");
 }
 
 $("always").addEventListener("click", (e) => {
@@ -97,9 +133,8 @@ $("always").addEventListener("click", (e) => {
 
 $("chips").addEventListener("click", (e) => {
   const b = e.target.closest("button");
-  const bad = e.target.closest(".chip.bad");
-  if (!b && bad) {              // look the unread words up in the tag browser
-    lookingUp = state.unmatched[+bad.dataset.find];
+  if (b?.dataset.find !== undefined) {   // look the unread words up in the tag browser
+    lookingUp = state.unmatched[+b.dataset.find];
     $("tags-panel").open = true;
     tags.open(lookingUp);
     return;
@@ -145,10 +180,13 @@ async function search(page) {
     state.page = r.page;
     state.more = r.more;
     if (page === 1) $("grid").innerHTML = "";
+    const before = $("grid").children.length;
     r.cards.forEach((c) => $("grid").insertAdjacentHTML("beforeend", card(c)));
     const n = $("grid").children.length;
     $("status").textContent = [...r.notes, n ? `${n} shown${r.more ? ", more available" : ""}` : "Nothing found - try removing a chip."].join(" ");
+    if (!n && $("mode").value === "all" && state.criteria.length > 1) $("status").insertAdjacentHTML("beforeend", TRY_ANY);
     $("more").hidden = !r.more;
+    if (page > 1) $("grid").children[before]?.querySelector(".info a")?.focus();   // keyboard users carry on from the new cards
   } catch (e) {
     $("status").textContent = "Error: " + e.message;
   } finally {
@@ -168,10 +206,10 @@ function card(c) {
     .filter(Boolean).join(" · ");
   const hits = $("mode").value === "any" && c.wanted ? ` · ${c.hits}/${c.wanted} tags` : "";
   return `<div class="card" data-id="${esc(c.id)}" data-title="${esc(c.title)}">
-    <button class="hide-btn" title="Not interested: never show this again">✕</button>
-    <a class="cover ${blur ? "blur" : ""}" href="${esc(href)}">${cover}</a>
+    <button class="hide-btn" title="Not interested: never show this again" aria-label="Not interested in ${esc(c.title)}">✕</button>
+    <a class="cover ${blur ? "blur" : ""}" href="${esc(href)}" tabindex="-1" aria-hidden="true">${cover}</a>
     <div class="info">
-      <a href="${esc(href)}">${esc(c.title)}</a> <a class="ext" href="${esc(c.url)}" target="_blank" rel="noopener" title="open on ${ln ? "anilist.co" : "vndb.org"}">↗</a>
+      <a href="${esc(href)}">${esc(c.title)}</a> <a class="ext" href="${esc(c.url)}" target="_blank" rel="noopener" title="open on ${ln ? "anilist.co" : "vndb.org"}" aria-label="Open on ${ln ? "anilist.co" : "vndb.org"}">↗</a>
       <div class="meta">${esc(meta + hits)}</div>
       <div class="tags">${c.tags.map((t) => `<span>${esc(t)}</span>`).join("")}</div>
     </div></div>`;
@@ -182,8 +220,8 @@ $("grid").addEventListener("click", async (e) => {
   const hb = e.target.closest(".hide-btn");
   if (hb) {
     const card = hb.closest(".card");
-    await prefsAction({ action: "hide", id: card.dataset.id, title: card.dataset.title });
-    card.remove();
+    if (await prefsAction({ action: "hide", id: card.dataset.id, title: card.dataset.title }))
+      hideWithUndo(card, () => prefsAction({ action: "unhide", id: card.dataset.id }));
     return;
   }
   const cov = e.target.closest(".cover.blur");
@@ -239,7 +277,7 @@ function titleSearch(t) {
 // one bar, two ways to search: "describe" (the parser) or "title" (VNDB title search)
 function setBy(by) {
   searchBy = by;
-  document.querySelectorAll("#search-form .by button").forEach((b) => b.classList.toggle("on", b.dataset.by === by));
+  pressed("#search-form .by button", (b) => b.dataset.by === by);
   $("q").placeholder = by === "title" ? SRC[state.source].titleHint : SRC[state.source].placeholder;
 }
 document.querySelectorAll("#search-form .by button").forEach((b) => b.addEventListener("click", () => { setBy(b.dataset.by); $("q").focus(); }));
@@ -285,11 +323,11 @@ $("mature").addEventListener("change", () => { localStorage.setItem("mature", $(
 function renderPrefs() {
   for (const l of ["normal", "mature"]) {
     $("ex-" + l).innerHTML = (prefs.exclude[layerOf(l)] || []).map((t) =>
-      `<span class="chip neg">${esc(t.name)}<button data-l="${layerOf(l)}" data-id="${esc(t.id)}">×</button></span>`).join("") || "<em>none</em>";
+      `<span class="chip neg">${esc(t.name)}<button data-l="${layerOf(l)}" data-id="${esc(t.id)}" aria-label="Stop excluding ${esc(t.name)}">×</button></span>`).join("") || "<em>none</em>";
   }
   const mine = prefs.hidden.filter((h) => h.id.startsWith(isLN() ? "l" : "v"));
   $("hidden-list").innerHTML = mine.map((h) =>
-    `<span class="chip pref"><a href="/${isLN() ? "ln" : "vn"}/${esc(h.id)}">${esc(h.title)}</a><button data-unhide="${esc(h.id)}">×</button></span>`).join("") || "<em>none</em>";
+    `<span class="chip pref"><a href="/${isLN() ? "ln" : "vn"}/${esc(h.id)}">${esc(h.title)}</a><button data-unhide="${esc(h.id)}" aria-label="Show ${esc(h.title)} again">×</button></span>`).join("") || "<em>none</em>";
   if ($("understood").hidden === false) renderAlways();
 }
 

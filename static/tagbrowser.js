@@ -4,7 +4,7 @@
 // rows: [{id, name, category, vn_count, why, description}] from parsing/tag_browser.py
 function mountTagBrowser(root, { search, onPick }) {
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-  root.innerHTML = `<input class="tb-q" type="search" autocomplete="off"
+  root.innerHTML = `<input class="tb-q" type="search" autocomplete="off" aria-label="Find a tag"
       placeholder="find a tag by name, nickname or description (typos are fine)">
     <div class="tb-list"></div>`;
   const input = root.querySelector(".tb-q"), list = root.querySelector(".tb-list");
@@ -18,8 +18,8 @@ function mountTagBrowser(root, { search, onPick }) {
       if (my !== seq) return;                      // a newer search has started
       rows = found;
       list.innerHTML = rows.map((t, i) => `<div class="tb-row">
-          <button class="tb-add" data-i="${i}" title="Add to the search">+</button>
-          <button class="tb-ex" data-i="${i}" title="Exclude from the search">−</button>
+          <button class="tb-add" data-i="${i}" title="Add to the search" aria-label="Add ${esc(t.name)}">+</button>
+          <button class="tb-ex" data-i="${i}" title="Exclude from the search" aria-label="Exclude ${esc(t.name)}">−</button>
           <span class="tb-main">${tagLink(t)}
             <span class="tb-n">${[/^g\d/.test(t.id) ? `${t.vn_count} VNs` : t.id.startsWith("genre:") ? "genre" : "",
                                   t.category === "tech" ? "technical" : "", esc(t.why || "")].filter(Boolean).join(" · ")}</span>

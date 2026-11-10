@@ -235,7 +235,7 @@ def description(text: str | None) -> str:
         return ""
     s = html.escape(text, quote=True)
     s = _ALLOWED.sub(lambda m: f"<{m[1]}{m[2].lower()}>", s)
-    s = re.sub(r"~!(.*?)!~", r'<span class="spoiler" title="click to reveal">\1</span>', s, flags=re.S)
+    s = re.sub(r"~!(.*?)!~", r'<span class="spoiler" role="button" tabindex="0" title="click to reveal">\1</span>', s, flags=re.S)
     s = re.sub(r"\s*\n\s*", "<br>", s.strip())
     return re.sub(r"(?:<br>\s*){3,}", "<br><br>", s)
 

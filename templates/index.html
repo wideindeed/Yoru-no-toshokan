@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+<a class="skip" href="#grid">Skip to results</a>
 <header>
   <a href="/about" class="about-hang">
     <span class="lamp-wrap" aria-hidden="true"><span class="cord"></span><span class="chochin"><span class="ji">灯</span></span></span>
@@ -21,7 +22,7 @@
   <div class="by src-switch" role="group" aria-label="Library"><button type="button" data-src="vn" class="on">Visual novels</button><button type="button" data-src="ln">Light novels</button></div>
   <form id="search-form">
     <div class="by" role="group" aria-label="Search by"><button type="button" data-by="describe" class="on">Describe</button><button type="button" data-by="title">Title</button></div>
-    <input id="q" type="text" autocomplete="off" autofocus
+    <input id="q" type="text" autocomplete="off" autofocus aria-label="Search"
            placeholder="e.g. fantasy setting, english, RPG Maker, multiple endings, female lead">
     <button type="submit">Search</button>
   </form>
@@ -50,9 +51,9 @@
   <details id="prefs-panel"><summary>Preferences</summary>
     <div class="prefs">
       <div><h3>Always exclude · Mature off</h3><div class="plist" id="ex-normal"></div>
-        <form class="padd" data-layer="normal"><input placeholder="tag, e.g. Otome Game"><button>Add</button></form></div>
+        <form class="padd" data-layer="normal"><input aria-label="Tag to always exclude, Mature off" placeholder="tag, e.g. Otome Game"><button>Add</button></form></div>
       <div><h3>Always exclude · Mature on</h3><div class="plist" id="ex-mature"></div>
-        <form class="padd" data-layer="mature"><input placeholder="tag, e.g. Rape"><button>Add</button></form></div>
+        <form class="padd" data-layer="mature"><input aria-label="Tag to always exclude, Mature on" placeholder="tag, e.g. Rape"><button>Add</button></form></div>
       <div><h3>Not interested</h3><div class="plist" id="hidden-list"></div></div>
     </div>
     <p id="prefs-msg" class="pmsg"></p>
@@ -61,7 +62,7 @@
 
 <section id="understood" hidden>
   <div id="rewritten-row" hidden>
-    Rewritten as: <input id="rewritten" type="text" title="Edit and press Enter to re-parse">
+    Rewritten as: <input id="rewritten" type="text" aria-label="Rewritten query" title="Edit and press Enter to re-parse">
     <span id="llm-note"></span>
   </div>
   <div>Understood as: <span id="chips"></span></div>
@@ -77,9 +78,10 @@
     <li><button class="try">vampires, made in RPG Maker, no horror, after 2015</button></li>
   </ul>
 </div>
-<p id="status"></p>
-<main id="grid"></main>
+<p id="status" role="status"></p>
+<main id="grid" tabindex="-1"></main>
 <div id="more-row"><button id="more" hidden>Load more</button></div>
+<div id="toast" role="status"></div>
 
 <script src="{{ url_for('static', filename='tagbrowser.js') }}"></script>
 <script src="{{ url_for('static', filename='app.js') }}"></script>

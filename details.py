@@ -52,7 +52,7 @@ def bbcode(text: str | None) -> str:
     s = re.sub(r"\[url=([^\]]+)\](.*?)\[/url\]", lambda m: _link(m[1], m[2]), s, flags=re.S | re.I)
     for tag, rep in (("b", "strong"), ("i", "em"), ("u", "u"), ("s", "s")):
         s = re.sub(rf"\[{tag}\](.*?)\[/{tag}\]", rf"<{rep}>\1</{rep}>", s, flags=re.S | re.I)
-    s = re.sub(r"\[spoiler\](.*?)\[/spoiler\]", r'<span class="spoiler" title="click to reveal">\1</span>', s, flags=re.S | re.I)
+    s = re.sub(r"\[spoiler\](.*?)\[/spoiler\]", r'<span class="spoiler" role="button" tabindex="0" title="click to reveal">\1</span>', s, flags=re.S | re.I)
     s = re.sub(r"\[quote\](.*?)\[/quote\]", r"<blockquote>\1</blockquote>", s, flags=re.S | re.I)
     # bare VNDB ids like v17 become links to their pages (not inside existing tags/links)
     s = re.sub(r"(?<![\w/=\"#&>])v(\d+)\b(?![^<]*</a>)", r'<a href="/vn/v\1">v\1</a>', s)

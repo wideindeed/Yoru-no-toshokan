@@ -18,7 +18,7 @@
 <main class="vn">
   <div class="vn-side">
     {% if vn.cover %}
-      <div class="cover big {% if vn.cover_blur %}blur{% endif %}"><img src="{{ vn.cover }}" alt="" referrerpolicy="no-referrer"></div>
+      <div class="cover big {% if vn.cover_blur %}blur{% endif %}"{% if vn.cover_blur %} role="button" tabindex="0" aria-label="Reveal cover"{% endif %}><img src="{{ vn.cover }}" alt="" referrerpolicy="no-referrer"></div>
     {% else %}
       <div class="cover big"><div class="placeholder">no cover</div></div>
     {% endif %}
@@ -57,15 +57,15 @@
     {% if vn.screenshots %}
       <h2>Screenshots</h2>
       <div class="shots">
-        {% for s in vn.screenshots %}<a class="cover shot {% if s.blur %}blur{% endif %}" href="{{ s.url }}" data-i="{{ loop.index0 }}"><img src="{{ s.thumb }}" alt="" loading="lazy" referrerpolicy="no-referrer"></a>{% endfor %}
+        {% for s in vn.screenshots %}<a class="cover shot {% if s.blur %}blur{% endif %}" href="{{ s.url }}" data-i="{{ loop.index0 }}" aria-label="Screenshot {{ loop.index }}"><img src="{{ s.thumb }}" alt="" loading="lazy" referrerpolicy="no-referrer"></a>{% endfor %}
       </div>
-      <div id="viewer" hidden>
-        <button class="v-close" title="Close (Esc)">×</button>
-        <button class="v-nav v-prev" title="Previous (←)">‹</button>
+      <dialog id="viewer" aria-label="Screenshots">
+        <button class="v-close" title="Close (Esc)" aria-label="Close">×</button>
+        <button class="v-nav v-prev" title="Previous (←)" aria-label="Previous screenshot">‹</button>
         <figure><img id="v-img" alt="" referrerpolicy="no-referrer"><figcaption id="v-count"></figcaption></figure>
-        <button class="v-nav v-next" title="Next (→)">›</button>
+        <button class="v-nav v-next" title="Next (→)" aria-label="Next screenshot">›</button>
         <div class="v-strip">{% for s in vn.screenshots %}<img src="{{ s.thumb }}" data-i="{{ loop.index0 }}" alt="" loading="lazy" referrerpolicy="no-referrer">{% endfor %}</div>
-      </div>
+      </dialog>
     {% endif %}
 
     {% if vn.relations %}
@@ -112,8 +112,10 @@
       strip[cur].scrollIntoView({ block: "nearest", inline: "center" });
       [cur - 1, cur + 1].forEach((j) => { new Image().src = thumbs[(j + thumbs.length) % thumbs.length].href; });  // preload neighbours
     };
-    const open = (i) => { viewer.hidden = false; document.body.style.overflow = "hidden"; show(i); };
-    const close = () => { viewer.hidden = true; document.body.style.overflow = ""; };
+    // a native <dialog>: it traps focus, closes on Esc and hands focus back to the thumbnail
+    const open = (i) => { viewer.showModal(); document.body.style.overflow = "hidden"; show(i); };
+    const close = () => viewer.close();
+    viewer.addEventListener("close", () => { document.body.style.overflow = ""; });
     thumbs.forEach((t) => t.addEventListener("click", (e) => {
       e.preventDefault();
       if (!t.classList.contains("blur")) open(+t.dataset.i);   // a blurred one is revealed by the handler below first
@@ -124,13 +126,15 @@
     viewer.querySelector(".v-close").addEventListener("click", close);
     strip.forEach((s) => s.addEventListener("click", () => show(+s.dataset.i)));
     viewer.addEventListener("click", (e) => { if (e.target === viewer || e.target.tagName === "FIGURE") close(); });
-    document.addEventListener("keydown", (e) => {
-      if (viewer.hidden) return;
-      if (e.key === "Escape") close();
-      else if (e.key === "ArrowLeft") show(cur - 1);
+    viewer.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowLeft") show(cur - 1);
       else if (e.key === "ArrowRight") show(cur + 1);
     });
   }
+  // role="button" spans (spoilers, a blurred cover) work from the keyboard
+  document.addEventListener("keydown", (e) => {
+    if ((e.key === "Enter" || e.key === " ") && e.target.matches('[role="button"]')) { e.preventDefault(); e.target.click(); }
+  });
   document.querySelectorAll(".all-tags").forEach((b) => b.addEventListener("click", () => {
     b.parentElement.classList.add("open"); b.remove();
   }));

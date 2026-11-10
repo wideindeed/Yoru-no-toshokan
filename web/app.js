@@ -12,6 +12,43 @@ function esc(s) {
   return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
+// toggle-button groups: .on for the look, aria-pressed for screen readers
+function pressed(sel, isOn) {
+  document.querySelectorAll(sel).forEach((b) => { b.classList.toggle("on", isOn(b)); b.setAttribute("aria-pressed", isOn(b)); });
+}
+
+// "Not interested" acts at once; a short message offers Undo instead of asking first
+let toastTimer;
+function hideWithUndo(card, unhide) {
+  const grid = card.parentNode, next = card.nextElementSibling, t = $("toast");
+  const away = () => {     // the message goes; keep keyboard focus on the grid
+    if (t.contains(document.activeElement)) (next?.isConnected ? next.querySelector(".info a") : grid).focus();
+    t.innerHTML = "";
+  };
+  card.remove();
+  t.innerHTML = `Hidden: ${esc(card.dataset.title)} <button type="button">Undo</button>`;
+  t.querySelector("button").onclick = () => {
+    clearTimeout(toastTimer);
+    unhide();
+    if (!next || next.parentNode === grid) { grid.insertBefore(card, next); card.querySelector(".info a").focus(); }
+    t.innerHTML = "";
+  };
+  t.querySelector("button").focus();
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(away, 7000);
+}
+
+// nothing found with every tag required: offer to rank by any tag instead
+const TRY_ANY = ' <button type="button" id="try-any">Match any tag instead</button>';
+$("status").addEventListener("click", (e) => {
+  if (e.target.id === "try-any") { $("mode").value = "any"; search(1); }
+});
+// the sticky header must not cover what has keyboard focus
+const head = document.querySelector("header");
+new ResizeObserver(() => {
+  document.documentElement.style.scrollPaddingTop = getComputedStyle(head).position === "sticky" ? head.offsetHeight + 12 + "px" : "";
+}).observe(head);
+
 // ---------------------------------------------------------------- Python
 const py = (async () => {
   const p = await loadPyodide();
@@ -67,7 +104,7 @@ function applySource(src) {
   const S = SRC[state.source];
   document.documentElement.dataset.src = state.source;
   localStorage.setItem("src", state.source);
-  document.querySelectorAll(".src-switch button").forEach((b) => b.classList.toggle("on", b.dataset.src === state.source));
+  pressed(".src-switch button", (b) => b.dataset.src === state.source);
   document.querySelector(".tagline").textContent = S.tagline;
   const ji = document.querySelector(".chochin .ji");
   if (ji) ji.textContent = isLN() ? "栞" : "灯";
@@ -89,9 +126,9 @@ const exKey = () => (isLN() ? "ln_exclude" : "exclude");
 
 function renderPrefs() {
   $("ex-list").innerHTML = prefs[exKey()].map((t) =>
-    `<span class="chip neg">${esc(t.name)}<button data-id="${esc(t.id)}">×</button></span>`).join("") || "<em>none</em>";
+    `<span class="chip neg">${esc(t.name)}<button data-id="${esc(t.id)}" aria-label="Stop excluding ${esc(t.name)}">×</button></span>`).join("") || "<em>none</em>";
   $("hidden-list").innerHTML = Object.entries(prefs.hidden).filter(([id]) => id.startsWith(isLN() ? "l" : "v")).map(([id, title]) =>
-    `<span class="chip pref"><a href="#${esc(id)}">${esc(title)}</a><button data-unhide="${esc(id)}">×</button></span>`).join("") || "<em>none</em>";
+    `<span class="chip pref"><a href="#${esc(id)}">${esc(title)}</a><button data-unhide="${esc(id)}" aria-label="Show ${esc(title)} again">×</button></span>`).join("") || "<em>none</em>";
   if (!$("understood").hidden) renderAlways();
 }
 
@@ -134,9 +171,9 @@ async function parseAndSearch(text) {
 function renderChips() {
   $("understood").hidden = false;
   const good = state.criteria.map((c, i) =>
-    `<span class="chip ${c.exclude ? "neg" : ""}" title="${esc(c.method)} from '${esc(c.phrase)}'">${esc(c.display)}<button data-i="${i}">×</button></span>`);
+    `<span class="chip ${c.exclude ? "neg" : ""}" title="${esc(c.method)} from '${esc(c.phrase)}'">${esc(c.display)}<button data-i="${i}" aria-label="Remove ${esc(c.display)}">×</button></span>`);
   const bad = state.unmatched.map((u, i) =>
-    `<span class="chip bad" data-find="${i}" title="not understood - click to look it up in Browse tags">${esc(u)}<button data-u="${i}">×</button></span>`);
+    `<span class="chip bad"><button class="find" data-find="${i}" title="not understood - click to look it up in Browse tags">${esc(u)}</button><button data-u="${i}" aria-label="Remove ${esc(u)}">×</button></span>`);
   $("chips").innerHTML = good.concat(bad).join("") || "<em>nothing</em>";
   renderAlways();
 }
@@ -145,7 +182,7 @@ function renderAlways() {
   const list = prefs[exKey()].filter((t) => !state.skip.includes(t.id));
   $("always-row").hidden = !list.length;
   $("always").innerHTML = list.map((t) =>
-    `<span class="chip pref" title="from Preferences; × skips it for this search">NOT: ${esc(t.name)}<button data-skip="${esc(t.id)}">×</button></span>`).join("");
+    `<span class="chip pref" title="from Preferences; × skips it for this search">NOT: ${esc(t.name)}<button data-skip="${esc(t.id)}" aria-label="Skip ${esc(t.name)} for this search">×</button></span>`).join("");
 }
 
 $("always").addEventListener("click", (e) => {
@@ -157,9 +194,8 @@ $("always").addEventListener("click", (e) => {
 });
 $("chips").addEventListener("click", (e) => {
   const b = e.target.closest("button");
-  const bad = e.target.closest(".chip.bad");
-  if (!b && bad) {              // look the unread words up in the tag browser
-    lookingUp = state.unmatched[+bad.dataset.find];
+  if (b?.dataset.find !== undefined) {   // look the unread words up in the tag browser
+    lookingUp = state.unmatched[+b.dataset.find];
     $("tags-panel").open = true;
     tags.open(lookingUp);
     return;
@@ -205,6 +241,7 @@ async function search(page) {
     state.page = page;
     state.more = more;
     if (page === 1) $("grid").innerHTML = "";
+    const before = $("grid").children.length;
     cards.forEach((c) => $("grid").insertAdjacentHTML("beforeend", card(c)));
     const n = $("grid").children.length;
     const notes = [...state.notes, ...extra,
@@ -212,7 +249,9 @@ async function search(page) {
     $("status").textContent = [...notes, n ? `${n} shown${state.more ? ", more available" : ""}` : "Nothing found - try removing a label."].join(" ");
     if (state.notes.length)       // the only note is the adult one: point to the desktop version
       $("status").insertAdjacentHTML("beforeend", ` <a href="${DESKTOP_URL}" target="_blank" rel="noopener">Adult titles: get the free desktop version ↗</a>`);
+    if (!n && mode === "all" && state.criteria.length > 1) $("status").insertAdjacentHTML("beforeend", TRY_ANY);
     $("more").hidden = !state.more;
+    if (page > 1) $("grid").children[before]?.querySelector(".info a")?.focus();   // keyboard users carry on from the new cards
   } catch (e) {
     $("status").textContent = "Error: " + e.message;
   } finally {
@@ -230,10 +269,10 @@ function card(c) {
     .filter(Boolean).join(" · ");
   const hits = $("mode").value === "any" && c.wanted ? ` · ${c.hits}/${c.wanted} tags` : "";
   return `<div class="card" data-id="${esc(c.id)}" data-title="${esc(c.title)}">
-    <button class="hide-btn" title="Not interested: never show this again">✕</button>
-    <a class="cover ${c.blur ? "blur" : ""}" href="#${esc(c.id)}">${cover}</a>
+    <button class="hide-btn" title="Not interested: never show this again" aria-label="Not interested in ${esc(c.title)}">✕</button>
+    <a class="cover ${c.blur ? "blur" : ""}" href="#${esc(c.id)}" tabindex="-1" aria-hidden="true">${cover}</a>
     <div class="info">
-      <a href="#${esc(c.id)}">${esc(c.title)}</a> <a class="ext" href="${esc(c.url)}" target="_blank" rel="noopener" title="open on ${ln ? "anilist.co" : "vndb.org"}">↗</a>
+      <a href="#${esc(c.id)}">${esc(c.title)}</a> <a class="ext" href="${esc(c.url)}" target="_blank" rel="noopener" title="open on ${ln ? "anilist.co" : "vndb.org"}" aria-label="Open on ${ln ? "anilist.co" : "vndb.org"}">↗</a>
       <div class="meta">${esc(meta + hits)}</div>
       <div class="tags">${c.tags.map((t) => `<span>${esc(t)}</span>`).join("")}</div>
     </div></div>`;
@@ -245,7 +284,8 @@ $("grid").addEventListener("click", (e) => {
     const c = hb.closest(".card");
     if (Object.keys(prefs.hidden).length >= MAX_HIDDEN) { $("status").textContent = `At most ${MAX_HIDDEN} hidden titles.`; return; }
     prefs.hidden[c.dataset.id] = c.dataset.title;
-    savePrefs(); renderPrefs(); c.remove();
+    savePrefs(); renderPrefs();
+    hideWithUndo(c, () => { delete prefs.hidden[c.dataset.id]; savePrefs(); renderPrefs(); });
     return;
   }
   const cov = e.target.closest(".cover.blur");
@@ -301,7 +341,7 @@ function titleSearch(t) {
 // one bar, two ways to search: "describe" (the parser) or "title" (VNDB title search)
 function setBy(by) {
   searchBy = by;
-  document.querySelectorAll("#search-form .by button").forEach((b) => b.classList.toggle("on", b.dataset.by === by));
+  pressed("#search-form .by button", (b) => b.dataset.by === by);
   $("q").placeholder = by === "title" ? SRC[state.source].titleHint : SRC[state.source].placeholder;
 }
 document.querySelectorAll("#search-form .by button").forEach((b) => b.addEventListener("click", () => { setBy(b.dataset.by); $("q").focus(); }));
@@ -369,7 +409,7 @@ function vnHtml(vn) {
   const row = (th, td) => td ? `<tr><th>${esc(th)}</th><td>${td}</td></tr>` : "";
   const list = (xs) => xs.map(esc).join(", ");
   const cover = vn.cover
-    ? `<div class="cover big ${vn.cover_blur ? "blur" : ""}"><img src="${esc(vn.cover)}" alt="" referrerpolicy="no-referrer"></div>`
+    ? `<div class="cover big ${vn.cover_blur ? "blur" : ""}"${vn.cover_blur ? ' role="button" tabindex="0" aria-label="Reveal cover"' : ""}><img src="${esc(vn.cover)}" alt="" referrerpolicy="no-referrer"></div>`
     : `<div class="cover big"><div class="placeholder">no cover</div></div>`;
   const staff = vn.staff.map(([role, names]) => row(role, list(names.slice(0, 4)) +
     (names.length > 4 ? ` <span class="muted">+${names.length - 4}</span>` : ""))).join("");
@@ -377,14 +417,14 @@ function vnHtml(vn) {
     ${g.tags.map((t, i) => `<a class="tag ${t.spoiler ? "spoiler-tag" : ""} ${i >= 30 ? "extra" : ""}" href="https://vndb.org/${esc(t.id)}" target="_blank" rel="noopener" title="score ${t.rating}${t.spoiler ? " · spoiler" : ""}">${esc(t.name)}</a>`).join("")}
     ${g.tags.length > 30 ? `<button class="all-tags">show all ${g.tags.length}</button>` : ""}</div>`).join("") || `<p class="muted">No tags.</p>`;
   const shots = vn.screenshots.length ? `<h2>Screenshots</h2><div class="shots">
-    ${vn.screenshots.map((s, i) => `<a class="cover shot ${s.blur ? "blur" : ""}" href="${esc(s.url)}" data-i="${i}"><img src="${esc(s.thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer"></a>`).join("")}</div>
-    <div id="viewer" hidden>
-      <button class="v-close" title="Close (Esc)">×</button>
-      <button class="v-nav v-prev" title="Previous (←)">‹</button>
+    ${vn.screenshots.map((s, i) => `<a class="cover shot ${s.blur ? "blur" : ""}" href="${esc(s.url)}" data-i="${i}" aria-label="Screenshot ${i + 1}"><img src="${esc(s.thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer"></a>`).join("")}</div>
+    <dialog id="viewer" aria-label="Screenshots">
+      <button class="v-close" title="Close (Esc)" aria-label="Close">×</button>
+      <button class="v-nav v-prev" title="Previous (←)" aria-label="Previous screenshot">‹</button>
       <figure><img id="v-img" alt="" referrerpolicy="no-referrer"><figcaption id="v-count"></figcaption></figure>
-      <button class="v-nav v-next" title="Next (→)">›</button>
+      <button class="v-nav v-next" title="Next (→)" aria-label="Next screenshot">›</button>
       <div class="v-strip">${vn.screenshots.map((s, i) => `<img src="${esc(s.thumb)}" data-i="${i}" alt="" loading="lazy" referrerpolicy="no-referrer">`).join("")}</div>
-    </div>` : "";
+    </dialog>` : "";
   const rels = vn.relations.length ? `<h2>Related</h2><div class="relations">${vn.relations.map((r) => `
     <a class="rel" href="#${esc(r.id)}">
       <div class="cover ${r.blur ? "blur" : ""}">${r.cover ? `<img src="${esc(r.cover)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : `<div class="placeholder">no cover</div>`}</div>
@@ -485,14 +525,14 @@ $("vn-body").addEventListener("click", (e) => {
   b.classList.remove("blur");
   b.classList.add("shown");
 });
+$("vn-body").addEventListener("keydown", (e) => {
+  if ((e.key === "Enter" || e.key === " ") && e.target.matches('[role="button"]')) { e.preventDefault(); e.target.click(); }
+});
 $("vn-body").addEventListener("change", (e) => {
   if (e.target.id === "show-spoilers") document.body.classList.toggle("spoilers", e.target.checked);
 });
 
-let viewerKeys = null;
 function bindViewer() {
-  if (viewerKeys) document.removeEventListener("keydown", viewerKeys);
-  viewerKeys = null;
   const viewer = $("viewer");
   if (!viewer) return;
   const thumbs = [...document.querySelectorAll(".shots .shot")];
@@ -509,8 +549,9 @@ function bindViewer() {
     strip[cur].scrollIntoView({ block: "nearest", inline: "center" });
     [cur - 1, cur + 1].forEach((j) => { new Image().src = thumbs[(j + thumbs.length) % thumbs.length].href; });
   };
-  const open = (i) => { viewer.hidden = false; document.body.style.overflow = "hidden"; show(i); };
-  const close = () => { viewer.hidden = true; document.body.style.overflow = ""; };
+  const open = (i) => { viewer.showModal(); document.body.style.overflow = "hidden"; show(i); };
+  const close = () => viewer.close();
+  viewer.addEventListener("close", () => { document.body.style.overflow = ""; });
   thumbs.forEach((t) => t.addEventListener("click", (e) => {
     e.preventDefault();
     if (t.classList.contains("blur")) t.classList.remove("blur");   // first click reveals
@@ -522,13 +563,10 @@ function bindViewer() {
   viewer.querySelector(".v-close").addEventListener("click", close);
   strip.forEach((s) => s.addEventListener("click", () => show(+s.dataset.i)));
   viewer.addEventListener("click", (e) => { if (e.target === viewer || e.target.tagName === "FIGURE") close(); });
-  viewerKeys = (e) => {
-    if (viewer.hidden) return;
-    if (e.key === "Escape") close();
-    else if (e.key === "ArrowLeft") show(cur - 1);
+  viewer.addEventListener("keydown", (e) => {   // Esc is the dialog's own
+    if (e.key === "ArrowLeft") show(cur - 1);
     else if (e.key === "ArrowRight") show(cur + 1);
-  };
-  document.addEventListener("keydown", viewerKeys);
+  });
 }
 
 function showSearch() {

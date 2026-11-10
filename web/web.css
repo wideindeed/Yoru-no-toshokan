@@ -2,7 +2,7 @@
 .allages { border: 1px solid var(--line); border-radius: 3px; padding: 1px 8px; color: var(--muted); font-size: 12px; text-decoration: none; }
 .allages:hover { color: var(--amber); border-color: var(--amber-dim); }
 #status a { color: var(--amber); }
-.pmsg-note { margin: 8px 0 0; font-style: italic; color: #5f5a52; }
+.pmsg-note { margin: 8px 0 0; font-style: italic; color: var(--muted); }
 .vn-status { padding: 20px 32px; color: var(--muted); font: italic 14px var(--serif); }
-.site-foot { padding: 26px 32px 30px; color: #5f5a52; font-size: 12px; border-top: 1px solid rgba(255, 255, 255, .04); }
+.site-foot { padding: 26px 32px 30px; color: var(--muted); font-size: 12px; border-top: 1px solid rgba(255, 255, 255, .04); }
 .site-foot a { color: var(--muted); }
