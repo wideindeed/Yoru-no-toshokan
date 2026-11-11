@@ -109,6 +109,25 @@ class Finder:
         if mode == "any" and groups:
             cards.sort(key=lambda c: -c["hits"])   # stable: keeps API order within a hit count
         notes = []
+        if mode == "all" and page == 1 and len(cards) < n:
+            # too few have every tag: add the closest matches (all tags but one, then two...)
+            seen, pool = {c["id"] for c in cards}, []
+            for level in qb.relaxed(crits):
+                for cs in level:
+                    f = qb.build_filters(cs, self.cfg, mode="all", mature=mature)
+                    if hidden:
+                        f = qb._and([f, *[["id", "!=", v] for v in hidden]])
+                    for v in self.client.query("vn", filters=f, fields=qb.VN_FIELDS, sort=field,
+                                               reverse=reverse, results=n, page=1).get("results", []):
+                        if v["id"] not in seen:
+                            seen.add(v["id"])
+                            pool.append(v)
+                if len(cards) + len(pool) >= n:
+                    break
+            close = qb.rank_close([qb.to_card(v, self.cfg, groups, mature) for v in pool], sort, n - len(cards))
+            if close:
+                notes.append(qb.close_note(len(cards)))
+                cards += close
         if not criteria:
             notes.append("No criteria understood; showing top VNDB results.")
         if qb.content_in_query(criteria):

@@ -1,6 +1,8 @@
 """ParseResult -> Kana /vn filter JSON, plus result-card shaping."""
 from __future__ import annotations
 
+from itertools import combinations
+
 from parsing.model import Criterion, ParseResult
 
 VN_FIELDS = ", ".join([
@@ -97,6 +99,36 @@ def build_filters(res: ParseResult | list[Criterion], cfg: dict, mode: str = "al
         return _and([_or([criterion_filter(c, cfg) for c in pos_tags]),
                      *[criterion_filter(c, cfg) for c in rest], *extra])
     return _and([criterion_filter(c, cfg) for c in crits] + extra)
+
+
+def relaxed(crits: list[Criterion], budget: int = 8) -> list[list[list[Criterion]]]:
+    """Close matches for an all-tags search that found too little: the criteria with
+    1, then 2, ... of the wanted tags left out, as levels of criteria lists (at most
+    `budget` lists in all). Everything else (length, language, excludes) stays."""
+    pos = [i for i, c in enumerate(crits) if c.kind in ("tag", "tag_any") and not c.exclude]
+    levels = []
+    for drop in range(1, len(pos)):
+        level = []
+        for left_out in combinations(pos, drop):
+            if budget <= 0:
+                break
+            level.append([c for i, c in enumerate(crits) if i not in left_out])
+            budget -= 1
+        if level:
+            levels.append(level)
+    return levels
+
+
+def rank_close(cards: list[dict], sort: str, limit: int) -> list[dict]:
+    """Close matches: most wanted tags first, then the chosen sort; marked for the UI."""
+    key = {"rating": "rating", "votecount": "votecount", "released": "year"}.get(sort)
+    cards = sorted(cards, key=lambda c: (-c["hits"], -float(c.get(key) or 0) if key else 0))
+    return [{**c, "close": True} for c in cards[:limit]]
+
+
+def close_note(n_all: int) -> str:
+    return (f"{n_all or 'No'} VN{' has' if n_all == 1 else 's have'} all your tags; "
+            "closest matches follow, marked with how many they have.")
 
 
 def wanted_tag_groups(crits: list[Criterion]) -> list[tuple[set[str], list[str]]]:

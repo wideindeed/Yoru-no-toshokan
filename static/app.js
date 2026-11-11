@@ -207,7 +207,7 @@ function card(c) {
   const meta = [c.year, c.volumes ? `${c.volumes} vol.` : "",
                 c.rating ? `★ ${c.rating.toFixed(ln ? 1 : 2)}` : "unrated", c.votecount ? `${c.votecount} ${ln ? "users" : "votes"}` : ""]
     .filter(Boolean).join(" · ");
-  const hits = $("mode").value === "any" && c.wanted ? ` · ${c.hits}/${c.wanted} tags` : "";
+  const hits = ($("mode").value === "any" || c.close) && c.wanted ? ` · ${c.hits}/${c.wanted} tags` : "";
   return `<div class="card" data-id="${esc(c.id)}" data-title="${esc(c.title)}">
     <button class="hide-btn" title="Not interested: never show this again" aria-label="Not interested in ${esc(c.title)}">✕</button>
     <a class="cover ${blur ? "blur" : ""}" href="${esc(href)}" tabindex="-1" aria-hidden="true">${cover}</a>

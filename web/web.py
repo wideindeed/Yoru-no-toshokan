@@ -57,18 +57,40 @@ def parse(text: str) -> str:
 
 def query(criteria_json: str, sort: str, mode: str, page: int, excludes_json: str, hidden_json: str) -> str:
     """Request body for POST /kana/vn. excludes: [{id, name}], hidden: [vid]."""
+    crits, hidden = _with_prefs(criteria_json, excludes_json, hidden_json)
+    return json.dumps(_body(crits, sort, mode, page, hidden))
+
+
+def relaxed(criteria_json: str, sort: str, excludes_json: str, hidden_json: str) -> str:
+    """Close matches when an all-tags search found too little: levels of request bodies
+    (all tags but one, then two, ...; see qb.relaxed). {"need": per page, "levels": [[body]]}"""
+    crits, hidden = _with_prefs(criteria_json, excludes_json, hidden_json)
+    return json.dumps({"need": int(cfg["results_per_page"]),
+                       "levels": [[_body(cs, sort, "all", 1, hidden) for cs in lv] for lv in qb.relaxed(crits)]})
+
+
+def close_cards(results_json: str, criteria_json: str, sort: str, limit: int, n_all: int) -> str:
+    groups = qb.wanted_tag_groups(_crits(criteria_json))
+    close = qb.rank_close([qb.to_card(v, cfg, groups, False) for v in json.loads(results_json)], sort, int(limit))
+    return json.dumps({"cards": close, "note": qb.close_note(int(n_all)) if close else ""})
+
+
+def _with_prefs(criteria_json, excludes_json, hidden_json):
     crits = _crits(criteria_json)
     crits += [Criterion("tag", t["id"], t["name"], exclude=True)
               for t in json.loads(excludes_json)[:MAX_EXCLUDES]]
     hidden = [v for v in json.loads(hidden_json)[:MAX_HIDDEN] if isinstance(v, str) and v.startswith("v")]
+    return crits, hidden
+
+
+def _body(crits, sort, mode, page, hidden) -> dict:
     # mature_filter(False) is added unconditionally: the query can't switch it off here
     filters = qb._and([qb.build_filters(crits, cfg, mode=mode), qb.mature_filter(False, cfg),
                        *[["id", "!=", v] for v in hidden]])
     sort = sort if sort in qb.SORTS else cfg["default_sort"]
     field, reverse = qb.api_sort(sort)
-    return json.dumps({"filters": filters, "fields": qb.VN_FIELDS, "sort": field,
-                       "reverse": reverse, "results": int(cfg["results_per_page"]),
-                       "page": int(page)})
+    return {"filters": filters, "fields": qb.VN_FIELDS, "sort": field,
+            "reverse": reverse, "results": int(cfg["results_per_page"]), "page": int(page)}
 
 
 def cards(results_json: str, criteria_json: str, mode: str) -> str:

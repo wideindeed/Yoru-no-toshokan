@@ -240,6 +240,20 @@ async function search(page) {
       const data = await vndb(await call("query", crits, sort, mode, page, excludes, hidden));
       cards = await call("cards", JSON.stringify(data.results || []), crits, mode);
       more = !!data.more;
+      if (mode === "all" && page === 1) {     // too few have every tag: add the closest matches
+        const { need, levels } = await call("relaxed", crits, sort, excludes, hidden);
+        if (cards.length < need && levels.length) {
+          const seen = new Set(cards.map((c) => c.id)), pool = [];
+          for (const level of levels) {
+            for (const body of level)
+              for (const v of (await vndb(body)).results || []) if (!seen.has(v.id)) { seen.add(v.id); pool.push(v); }
+            if (cards.length + pool.length >= need) break;
+          }
+          const close = await call("close_cards", JSON.stringify(pool), crits, sort, need - cards.length, cards.length);
+          if (close.note) extra = [close.note];
+          cards = cards.concat(close.cards);
+        }
+      }
     }
     state.page = page;
     state.more = more;
@@ -270,7 +284,7 @@ function card(c) {
   const meta = [c.year, c.volumes ? `${c.volumes} vol.` : "",
                 c.rating ? `★ ${c.rating.toFixed(ln ? 1 : 2)}` : "unrated", c.votecount ? `${c.votecount} ${ln ? "users" : "votes"}` : ""]
     .filter(Boolean).join(" · ");
-  const hits = $("mode").value === "any" && c.wanted ? ` · ${c.hits}/${c.wanted} tags` : "";
+  const hits = ($("mode").value === "any" || c.close) && c.wanted ? ` · ${c.hits}/${c.wanted} tags` : "";
   return `<div class="card" data-id="${esc(c.id)}" data-title="${esc(c.title)}">
     <button class="hide-btn" title="Not interested: never show this again" aria-label="Not interested in ${esc(c.title)}">✕</button>
     <a class="cover ${c.blur ? "blur" : ""}" href="#${esc(c.id)}" tabindex="-1" aria-hidden="true">${cover}</a>
