@@ -4,7 +4,6 @@ from __future__ import annotations
 from itertools import combinations
 
 from parsing.model import Criterion, ParseResult
-from vndb.tags import BLOCKED_TAGS
 
 VN_FIELDS = ", ".join([
     "id", "title", "alttitle", "released", "rating", "votecount", "length",
@@ -89,7 +88,7 @@ def content_in_query(crits: list[Criterion]) -> bool:
     return False
 
 
-BLOCK_FILTERS = [["tag", "!=", [t, 2, 0.0]] for t in sorted(BLOCKED_TAGS)]   # in every search, always
+BLOCK_FILTERS = []   # no tags are blocked
 
 
 def mature_filter(mature: bool, cfg: dict) -> list:
@@ -116,7 +115,7 @@ def build_filters(res: ParseResult | list[Criterion], cfg: dict, mode: str = "al
         pos_tags = [c for c in crits if c.kind in ("tag", "tag_any") and not (c.exclude or c.soft)]
         rest = [c for c in crits if c not in pos_tags]
         return _and([_or([criterion_filter(c, cfg) for c in pos_tags]),
-                     *[criterion, criterion_filter(c, cfg) for c in rest], *extra])
+                     *[criterion_filter(c, cfg) for c in rest], *extra])
     return _and([criterion_filter(c, cfg) for c in crits] + extra)
 
 

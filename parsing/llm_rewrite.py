@@ -69,15 +69,17 @@ class LLMRewriter:
         self.log = log
         self.http = session or requests.Session()
         self.url = cfg.get("llm_url", "http://127.0.0.1:11434").rstrip("/") + "/api/chat"
-        self.model = cfg.get("llm_model", "qwen2.5:7b-instruct")
+        self.model = cfg.get("llm_model", "qwen3:8b")
         self.timeout = float(cfg.get("llm_timeout", 20))
+        self.think = bool(cfg.get("llm_think", False))   # thinking models (qwen3): off = far faster
         keys = sorted(parser.synonyms.entries)
         self.system = SYSTEM.replace("{synonyms}", ", ".join(keys))
         self.tag_names = [t.name for t in parser.index.tags.values()]
 
-    def _chat(self, messages: list[dict], schema: dict) -> dict:
+    def _chat(self, messages: list[dict], schema: dict, think: bool | None = None) -> dict:
         r = self.http.post(self.url, timeout=self.timeout, json={
             "model": self.model, "messages": messages, "stream": False,
+            "think": self.think if think is None else think,
             "format": schema, "options": {"temperature": 0}, "keep_alive": "10m"})
         r.raise_for_status()
         return json.loads(r.json()["message"]["content"])
@@ -118,7 +120,8 @@ class LLMRewriter:
             cands[k] = names
         prompt = REPAIR_PROMPT + "\n".join(f"- {k!r}: {cands[k]}" for k in unmatched)
         try:
-            choices = self._chat([{"role": "user", "content": prompt}], REPAIR_SCHEMA)["choices"]
+            # judging "same meaning vs merely related" needs reasoning, so always think here
+            choices = self._chat([{"role": "user", "content": prompt}], REPAIR_SCHEMA, think=True)["choices"]
         except (requests.RequestException, ValueError, KeyError, TypeError) as e:
             self.log(f"LLM repair skipped ({e})")
             return kws

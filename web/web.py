@@ -21,10 +21,23 @@ from vndb.tags import TagIndex, read_tags
 MAX_EXCLUDES, MAX_HIDDEN = 50, 300
 ADULT_NOTE = "Adult content isn't available on the web version, so that part of your search was skipped."
 
+# Minor-content block: web-only. The desktop app no longer blocks anything, so the web
+# bridge keeps its own list. These tags never appear in the browser/parser, every search
+# excludes them, and any VN carrying one is dropped from results and detail pages.
+BLOCKED_TAGS = frozenset({"g156", "g3159", "g2272",
+                          "g184", "g2046", "g2047", "g3123",
+                          "g2023", "g1337"})
+BLOCK_FILTERS = [["tag", "!=", [t, 2, 0.0]] for t in sorted(BLOCKED_TAGS)]
+
+
+def _blocked(vn: dict) -> bool:
+    return any(t.get("id") in BLOCKED_TAGS for t in vn.get("tags") or [])
+
+
 cfg = load_config()
 cfg["use_llm"] = cfg["use_embeddings"] = False
 _, _tags = read_tags()
-index = TagIndex.build(_tags)
+index = TagIndex.build([t for t in _tags if t.id not in BLOCKED_TAGS])
 parser = QueryParser(index, cfg, log=lambda *a: None)
 browser = TagBrowser(index, parser.synonyms)
 FIELDS = {"vn": qb.VN_FIELDS, "detail": details.DETAIL_FIELDS}
@@ -88,7 +101,7 @@ def _with_prefs(criteria_json, excludes_json, hidden_json):
 def _body(crits, sort, mode, page, hidden) -> dict:
     # mature_filter(False) is added unconditionally: the query can't switch it off here
     filters = qb._and([qb.build_filters(crits, cfg, mode=mode), qb.mature_filter(False, cfg),
-                       *[["id", "!=", v] for v in hidden]])
+                       *BLOCK_FILTERS, *[["id", "!=", v] for v in hidden]])
     sort = sort if sort in qb.SORTS else cfg["default_sort"]
     field, reverse = qb.api_sort(sort)
     return {"filters": filters, "fields": qb.VN_FIELDS, "sort": field,
@@ -99,7 +112,7 @@ def vndb_filters(criteria_json: str, adult_json: str, mode: str) -> str:
     """Filters for an "Open on VNDB" link: the whole search, adult parts included, since
     VNDB shows its own catalog under its own settings. Blocked tags stay excluded."""
     crits = [Criterion.from_dict(d) for d in json.loads(criteria_json) + json.loads(adult_json)]
-    return json.dumps(qb.build_filters([c for c in crits if not c.soft], cfg, mode=mode))
+    return json.dumps(qb._and([qb.build_filters([c for c in crits if not c.soft], cfg, mode=mode), *BLOCK_FILTERS]))
 
 
 def cards(results_json: str, criteria_json: str, mode: str) -> str:
@@ -109,7 +122,7 @@ def cards(results_json: str, criteria_json: str, mode: str) -> str:
 
 def detail(vn_json: str) -> str:
     vn = json.loads(vn_json)
-    if details.blocked(vn):
+    if _blocked(vn):
         return "null"
     d = details.shape(vn, cfg, mature=False)
     d["description"] = d["description"].replace('href="/vn/', 'href="#')   # in-page links

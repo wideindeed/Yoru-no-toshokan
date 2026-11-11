@@ -6,7 +6,6 @@ import re
 
 from parsing.rules import LENGTH_LABELS
 from vndb.labels import LANGUAGE_LABELS, PLATFORM_LABELS, STAFF_ROLE_LABELS
-from vndb.tags import BLOCKED_TAGS
 
 DETAIL_FIELDS = ", ".join([
     "id", "title", "alttitle", "aliases", "released", "rating", "votecount", "length",

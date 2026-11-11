@@ -34,8 +34,9 @@ DEFAULTS = {
     "use_llm": False,
     "llm_backend": "ollama",
     "llm_url": "http://127.0.0.1:11434",
-    "llm_model": "qwen2.5:7b-instruct",
+    "llm_model": "qwen3:8b",
     "llm_timeout": 60,
+    "llm_think": False,
     "llm_repair": True,
 }
 

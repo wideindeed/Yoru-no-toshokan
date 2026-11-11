@@ -47,9 +47,10 @@ log_unmatched: true         # desktop: save words the parser did not understand 
 # --- Optional LLM rewriter (Ollama) ---
 # Rewrites conversational input into keywords for the rule parser; the parser
 # still decides every filter. Falls back to the rule parser if Ollama is down.
-use_llm: false
+use_llm: true
 llm_backend: ollama
 llm_url: http://127.0.0.1:11434
-llm_model: qwen2.5:7b-instruct  # any Ollama chat model; 7-8B Q4 fits 8 GB VRAM
+llm_model: qwen3:8b         # any Ollama chat model; 7-8B Q4 fits 8 GB VRAM
 llm_timeout: 60              # seconds (the first call loads the model into VRAM)
+llm_think: false            # thinking models (qwen3): keep off, far faster, same quality here
 llm_repair: true             # one extra round to map leftover phrases to real tag names
