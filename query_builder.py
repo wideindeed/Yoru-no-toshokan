@@ -116,7 +116,7 @@ def build_filters(res: ParseResult | list[Criterion], cfg: dict, mode: str = "al
         pos_tags = [c for c in crits if c.kind in ("tag", "tag_any") and not (c.exclude or c.soft)]
         rest = [c for c in crits if c not in pos_tags]
         return _and([_or([criterion_filter(c, cfg) for c in pos_tags]),
-                     *[criterion_filter(c, cfg) for c in rest], *extra])
+                     *[criterion, criterion_filter(c, cfg) for c in rest], *extra])
     return _and([criterion_filter(c, cfg) for c in crits] + extra)
 
 
