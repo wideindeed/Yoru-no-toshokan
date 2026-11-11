@@ -82,6 +82,8 @@ def build(crits: list[Criterion], index: TagIndex, cfg: dict, mode: str = "all",
 
     positives: list[list[str]] = []          # each: acceptable tag ids (OR)
     for c in crits:
+        if c.soft:                           # mood hints are VNDB tags; they never filter
+            continue
         if c.kind in UNSUPPORTED:
             skipped.append(c.label)
         elif c.kind in ("tag", "tag_any"):

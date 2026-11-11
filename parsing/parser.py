@@ -54,15 +54,27 @@ class QueryParser:
         if embedder is None and self.cfg.get("use_embeddings") and source == "vn":
             embedder = _try_load_embedder(index, self.cfg, log)
         self.matcher = TagMatcher(index, self.synonyms, self.cfg, embedder=embedder)
+        moods = sorted((k for k, v in self.synonyms.entries.items() if any(c.soft for c in v)), key=len, reverse=True)
+        # "not too dark mystery" -> "not dark, mystery": the degree goes (a mood hint only
+        # re-ranks) and the negation stops at the mood word
+        self._not_too_mood = re.compile(r"(?<![\w'])(not|nothing)\s+(?:too|very|that|overly|so|super)\s+("
+                                        + "|".join(map(re.escape, moods)) + r")(?![\w'])", re.I) if moods else None
 
     def parse(self, text: str) -> ParseResult:
         res = ParseResult(text)
         text = self._likes(text, res)
+        if self._not_too_mood:
+            text = self._not_too_mood.sub(r"\1 \2,", text)
         for sentence in _SENTENCE_RE.split(text):
             role = None                 # who this sentence describes, if anyone
             for phrase in rules.split_phrases(sentence):
                 role = self._role_in(phrase) or role
                 self._parse_phrase(phrase, res, role)
+        for c in res.criteria:          # related tags: tried in place of this one when too little matches
+            if c.kind in ("tag", "tag_any") and not (c.exclude or c.soft):
+                ids = [c.value] if c.kind == "tag" else c.value
+                rel = set().union(*(self.synonyms.related.get(i, set()) for i in ids)) - set(ids)
+                c.related = sorted(rel) or None
         return res
 
     def _likes(self, text: str, res: ParseResult) -> str:

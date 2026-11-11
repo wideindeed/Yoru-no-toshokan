@@ -47,8 +47,7 @@
 - q: detective story set in a big city, adult protagonist
   got: [Metropolitan Area, Detective Work, Adult Protagonist]
 - q: I want something dark and depressing with a bad ending
-  got: [Utsuge, Only Bad Endings]
-  unmatched: [dark]   # too vague to filter on; better reported than guessed
+  got: ["~ Dark", Utsuge, Only Bad Endings]   # "dark" is a soft hint: re-ranks, never filters
 - q: historical setting in japan, samurai
   got: [Past Japan, "Samurai: Hero / Protagonist / Heroine"]
 - q: visual novel with a dating sim element on android

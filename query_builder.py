@@ -41,6 +41,8 @@ def _tag(tid: str, c: Criterion, cfg: dict, op: str = "=") -> list:
 def criterion_filter(c: Criterion, cfg: dict):
     """One criterion -> one filter expression (exclusion already applied)."""
     ex = c.exclude
+    if c.soft:              # mood hints only re-rank (see build_filters for the one exception)
+        return None
     if c.kind == "tag":
         return _tag(c.value, c, cfg, "!=" if ex else "=")
     if c.kind == "tag_any":
@@ -101,8 +103,12 @@ def build_filters(res: ParseResult | list[Criterion], cfg: dict, mode: str = "al
     mature: True/False adds the Mature filter (unless the query sets a content level)."""
     crits = res.criteria if isinstance(res, ParseResult) else res
     extra = [mature_filter(mature, cfg)] if mature is not None and not content_in_query(crits) else []
+    moods = [c for c in crits if c.soft and not c.exclude]
+    if moods and not any(c.kind in ("tag", "tag_any") and not (c.exclude or c.soft) for c in crits):
+        # only mood words ("something dark and cute"): any one of their tags, else nothing narrows
+        extra.append(_or([_tag(t, c, cfg) for c in moods for t in c.value]))
     if mode == "any":
-        pos_tags = [c for c in crits if c.kind in ("tag", "tag_any") and not c.exclude]
+        pos_tags = [c for c in crits if c.kind in ("tag", "tag_any") and not (c.exclude or c.soft)]
         rest = [c for c in crits if c not in pos_tags]
         return _and([_or([criterion_filter(c, cfg) for c in pos_tags]),
                      *[criterion_filter(c, cfg) for c in rest], *extra])
@@ -110,11 +116,17 @@ def build_filters(res: ParseResult | list[Criterion], cfg: dict, mode: str = "al
 
 
 def relaxed(crits: list[Criterion], budget: int = 8) -> list[list[list[Criterion]]]:
-    """Close matches for an all-tags search that found too little: the criteria with
-    1, then 2, ... of the wanted tags left out, as levels of criteria lists (at most
-    `budget` lists in all). Everything else (length, language, excludes) stays."""
-    pos = [i for i, c in enumerate(crits) if c.kind in ("tag", "tag_any") and not c.exclude]
+    """Close matches for an all-tags search that found too little: first one wanted tag
+    swapped for its related tags, then 1, 2, ... of the wanted tags left out, as levels of
+    criteria lists (at most `budget` lists in all). Everything else (length, language,
+    excludes) stays."""
+    pos = [i for i, c in enumerate(crits) if c.kind in ("tag", "tag_any") and not (c.exclude or c.soft)]
     levels = []
+    swaps = [[Criterion("tag_any", c.related, c.label, min_level=c.min_level) if j == i else c
+              for j, c in enumerate(crits)] for i in pos if (c := crits[i]).related][:budget // 2]
+    if swaps:
+        levels.append(swaps)
+        budget -= len(swaps)
     for drop in range(1, len(pos)):
         level = []
         for left_out in combinations(pos, drop):
@@ -128,9 +140,11 @@ def relaxed(crits: list[Criterion], budget: int = 8) -> list[list[list[Criterion
 
 
 def rank_close(cards: list[dict], sort: str, limit: int) -> list[dict]:
-    """Close matches: most wanted tags first, then the chosen sort; marked for the UI."""
+    """Close matches: most wanted tags first, then related stand-ins, mood hints and the
+    chosen sort; marked for the UI."""
     key = {"rating": "rating", "votecount": "votecount", "released": "year"}.get(sort)
-    cards = sorted(cards, key=lambda c: (-c["hits"], -float(c.get(key) or 0) if key else 0))
+    cards = sorted(cards, key=lambda c: (-c["hits"], -c.get("near", 0), -c.get("hint", 0),
+                                         -float(c.get(key) or 0) if key else 0))
     return [{**c, "close": True} for c in cards[:limit]]
 
 
@@ -139,18 +153,25 @@ def close_note(n_all: int) -> str:
             "closest matches follow, marked with how many they have.")
 
 
-def wanted_tag_groups(crits: list[Criterion]) -> list[tuple[set[str], list[str], str]]:
-    """Each positive tag criterion as (acceptable ids, lowercase names, label) for re-ranking.
+def wanted_tag_groups(crits: list[Criterion]) -> list[tuple]:
+    """Each positive tag criterion as (acceptable ids, lowercase names, label, related ids,
+    mood) for re-ranking; mood hints (+1 wanted, -1 not wanted) never count as hits.
     Names let child tags count too: VNDB's tag filter matches "Vampire Heroine"
     for "Vampire", but the VN only lists the child's id."""
     out = []
     for c in crits:
-        if c.exclude or c.kind not in ("tag", "tag_any"):
+        if c.kind not in ("tag", "tag_any") or (c.exclude and not c.soft):
             continue
         ids = {c.value} if c.kind == "tag" else set(c.value)
-        names = [n.strip().lower() for n in c.label.split(" / ")] if c.kind == "tag" or "/" in c.label else []
-        out.append((ids, names, c.label))
+        names = [n.strip().lower() for n in c.label.split(" / ")] if not c.soft and (c.kind == "tag" or "/" in c.label) else []
+        mood = (-1 if c.exclude else 1) if c.soft else 0
+        out.append((ids, names, c.label, set(c.related or ()), mood))
     return out
+
+
+def order(cards: list[dict], mode: str) -> list[dict]:
+    """Any-tags mode: most wanted tags first. Then mood hints. Stable: keeps API order otherwise."""
+    return sorted(cards, key=lambda c: (-c["hits"] if mode == "any" else 0, -c.get("hint", 0)))
 
 
 def _hit(group, vn_tags: list[dict]) -> bool:
@@ -184,5 +205,9 @@ def to_card(vn: dict, cfg: dict, groups: list[set[str]] = (), show_explicit: boo
 
 def hit_summary(groups, item_tags: list[dict]) -> dict:
     """How many wanted tags a title has, and which ones it lacks (shown on the card)."""
-    missing = [g[2] for g in groups if not _hit(g, item_tags)]
-    return {"hits": len(groups) - len(missing), "wanted": len(groups), "missing": missing}
+    hard = [g for g in groups if not (len(g) > 4 and g[4])]
+    lacking = [g for g in hard if not _hit(g, item_tags)]
+    ids = {t["id"] for t in item_tags}
+    return {"hits": len(hard) - len(lacking), "wanted": len(hard), "missing": [g[2] for g in lacking],
+            "near": sum(1 for g in lacking if len(g) > 3 and g[3] & ids),
+            "hint": sum(g[4] for g in groups if len(g) > 4 and g[4] and g[0] & ids)}

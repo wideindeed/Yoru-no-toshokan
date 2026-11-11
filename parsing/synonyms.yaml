@@ -18,6 +18,8 @@
 #   lang: en                   # VNDB language code(s), e.g. en / [en, ja]
 #   platform: win              # VNDB platform code(s), e.g. win / [and, ios]
 #   min_level: 2.0             # optional: stricter tag level for this entry (0-3)
+#   mood: ["A", "B"]           # a vague mood word: titles with these tags move up,
+#                              # nothing is filtered out. `label:` names the chip.
 #   ln: { ... }                # light novel mode (AniList): these targets replace
 #                              # the ones above. AniList tag/genre names, see
 #                              # data/anilist_tags.json. An entry with ONLY `ln:`
@@ -92,15 +94,56 @@ phrases:
   depressing:               { tag: "Utsuge", ln: "Tragedy" }
   bleak:                    { tag: "Utsuge", ln: "Tragedy" }
   grim:                     { tag: "Utsuge", ln: "Tragedy" }
-  cozy:                     { tag: "Slice of Life", ln: "Iyashikei" }
-  cosy:                     { tag: "Slice of Life", ln: "Iyashikei" }
-  comfy:                    { tag: "Slice of Life", ln: "Iyashikei" }
-  relaxing:                 { tag: "Slice of Life", ln: "Iyashikei" }
-  chill:                    { tag: "Slice of Life", ln: "Iyashikei" }
-  laid back:                { tag: "Slice of Life", ln: "Iyashikei" }
-  heartwarming:             { tag: "Only Good Endings", ln: "Iyashikei" }
-  feel good:                { tag: "Only Good Endings", ln: "Iyashikei" }
-  feel-good:                { tag: "Only Good Endings", ln: "Iyashikei" }
+  light novel:              { tag: "Based on a Light Novel" }   # not the "light" mood
+  light novels:             { tag: "Based on a Light Novel" }
+  light novel adaptation:   { tag: "Based on a Light Novel" }
+  # Vague moods: soft hints. They only move matching titles up; they never
+  # filter anything out (unless the search has nothing else to go on).
+  dark:                     { mood: ["Desperation", "Psychological Trauma", "Descriptions of Violence", "Life and Death Drama", "Dark Fantasy", "Clinical Depression", "Utsuge"], label: "Dark" }
+  darker:                   { mood: ["Desperation", "Psychological Trauma", "Descriptions of Violence", "Life and Death Drama", "Dark Fantasy", "Clinical Depression", "Utsuge"], label: "Dark" }
+  edgy:                     { mood: ["Desperation", "Psychological Trauma", "Descriptions of Violence", "Life and Death Drama", "Dark Fantasy", "Clinical Depression", "Utsuge"], label: "Dark" }
+  disturbing:               { mood: ["Desperation", "Psychological Trauma", "Descriptions of Violence", "Life and Death Drama", "Dark Fantasy", "Clinical Depression", "Utsuge"], label: "Dark" }
+  light:                    { mood: ["Comedy", "Slice of Life Comedy", "Only Good Endings"], label: "Light" }
+  lighthearted:             { mood: ["Comedy", "Slice of Life Comedy", "Only Good Endings"], label: "Light" }
+  light-hearted:            { mood: ["Comedy", "Slice of Life Comedy", "Only Good Endings"], label: "Light" }
+  light hearted:            { mood: ["Comedy", "Slice of Life Comedy", "Only Good Endings"], label: "Light" }
+  fluffy:                   { mood: ["Comedy", "Slice of Life Comedy", "Only Good Endings"], label: "Light" }
+  fluff:                    { mood: ["Comedy", "Slice of Life Comedy", "Only Good Endings"], label: "Light" }
+  easygoing:                { mood: ["Comedy", "Slice of Life Comedy", "Only Good Endings"], label: "Light" }
+  cute:                     { mood: ["Slice of Life Comedy", "School Life Comedy", "Only Good Endings"], label: "Cute" }
+  adorable:                 { mood: ["Slice of Life Comedy", "School Life Comedy", "Only Good Endings"], label: "Cute" }
+  sweet:                    { mood: ["Slice of Life Comedy", "School Life Comedy", "Only Good Endings"], label: "Cute" }
+  hopeful:                  { mood: ["Only Good Endings", "Drastic Character Development (positive)", "Friendship"], label: "Hopeful", ln: "Iyashikei" }
+  uplifting:                { mood: ["Only Good Endings", "Drastic Character Development (positive)", "Friendship"], label: "Hopeful", ln: "Iyashikei" }
+  optimistic:               { mood: ["Only Good Endings", "Drastic Character Development (positive)", "Friendship"], label: "Hopeful", ln: "Iyashikei" }
+  heartwarming:             { mood: ["Only Good Endings", "Drastic Character Development (positive)", "Friendship"], label: "Hopeful", ln: "Iyashikei" }
+  feel good:                { mood: ["Only Good Endings", "Drastic Character Development (positive)", "Friendship"], label: "Hopeful", ln: "Iyashikei" }
+  feel-good:                { mood: ["Only Good Endings", "Drastic Character Development (positive)", "Friendship"], label: "Hopeful", ln: "Iyashikei" }
+  comfy:                    { mood: ["Slice of Life", "Slice of Life Comedy", "Only Good Endings"], label: "Comfy", ln: "Iyashikei" }
+  cozy:                     { mood: ["Slice of Life", "Slice of Life Comedy", "Only Good Endings"], label: "Comfy", ln: "Iyashikei" }
+  cosy:                     { mood: ["Slice of Life", "Slice of Life Comedy", "Only Good Endings"], label: "Comfy", ln: "Iyashikei" }
+  relaxing:                 { mood: ["Slice of Life", "Slice of Life Comedy", "Only Good Endings"], label: "Comfy", ln: "Iyashikei" }
+  chill:                    { mood: ["Slice of Life", "Slice of Life Comedy", "Only Good Endings"], label: "Comfy", ln: "Iyashikei" }
+  laid back:                { mood: ["Slice of Life", "Slice of Life Comedy", "Only Good Endings"], label: "Comfy", ln: "Iyashikei" }
+  calm:                     { mood: ["Slice of Life", "Slice of Life Comedy", "Only Good Endings"], label: "Comfy", ln: "Iyashikei" }
+  peaceful:                 { mood: ["Slice of Life", "Slice of Life Comedy", "Only Good Endings"], label: "Comfy", ln: "Iyashikei" }
+  soothing:                 { mood: ["Slice of Life", "Slice of Life Comedy", "Only Good Endings"], label: "Comfy", ln: "Iyashikei" }
+  intense:                  { mood: ["Life and Death Drama", "Thriller", "Suspense"], label: "Intense" }
+  gripping:                 { mood: ["Life and Death Drama", "Thriller", "Suspense"], label: "Intense" }
+  tense:                    { mood: ["Life and Death Drama", "Thriller", "Suspense"], label: "Intense" }
+  nail-biting:              { mood: ["Life and Death Drama", "Thriller", "Suspense"], label: "Intense" }
+  gloomy:                   { mood: ["Utsuge", "Nakige", "Desperation"], label: "Gloomy" }
+  melancholic:              { mood: ["Utsuge", "Nakige", "Desperation"], label: "Gloomy" }
+  melancholy:               { mood: ["Utsuge", "Nakige", "Desperation"], label: "Gloomy" }
+  somber:                   { mood: ["Utsuge", "Nakige", "Desperation"], label: "Gloomy" }
+  sombre:                   { mood: ["Utsuge", "Nakige", "Desperation"], label: "Gloomy" }
+  silly:                    { mood: ["Comedy", "Absurdist Comedy", "Slapstick"], label: "Silly" }
+  goofy:                    { mood: ["Comedy", "Absurdist Comedy", "Slapstick"], label: "Silly" }
+  wacky:                    { mood: ["Comedy", "Absurdist Comedy", "Slapstick"], label: "Silly" }
+  zany:                     { mood: ["Comedy", "Absurdist Comedy", "Slapstick"], label: "Silly" }
+  steamy:                   { mood: ["Kissing Scene", "Romance"], label: "Steamy" }
+  spicy:                    { mood: ["Kissing Scene", "Romance"], label: "Steamy" }
+  flirty:                   { mood: ["Kissing Scene", "Romance"], label: "Steamy" }
   wholesome:                { content: all_ages, ln: "Iyashikei" }
   happy ending:             { tag: "Only Good Endings" }
   happy endings:            { tag: "Only Good Endings" }
@@ -209,15 +252,93 @@ phrases:
   h scene:                  { content: explicit }
   sex scenes:               { content: explicit }
 
+  # --- everyday phrasings from real searches -----------------------------
+  psychological:            { any_tags: ["Psychological Horror", "Psychological Trauma", "Mind Screw"], ln: "Psychological" }
+  mess with my head:        { tag: "Mind Screw", ln: "Psychological" }
+  messes with your head:    { tag: "Mind Screw", ln: "Psychological" }
+  mind screw:               { tag: "Mind Screw", ln: "Psychological" }
+  mindfuck:                 { tag: "Mind Screw", ln: "Psychological" }
+  sad ending:               { any_tags: ["Utsuge", "Nakige"], ln: "Tragedy" }
+  tragic ending:            { any_tags: ["Utsuge", "Nakige"], ln: "Tragedy" }
+  bittersweet ending:       { tag: "Nakige", ln: "Tragedy" }
+  bittersweet:              { tag: "Nakige", ln: "Tragedy" }
+  wholesome ending:         { tag: "Only Good Endings" }
+  suffer:                   { tag: "Utsuge", ln: "Tragedy" }
+  make me suffer:           { tag: "Utsuge", ln: "Tragedy" }
+  vanilla:                  { exclude_tags: ["Netorare", "Rape"] }
+  pure love:                { exclude_tags: ["Netorare", "Rape"], ln: "Romance" }
+  consensual:               { exclude_tags: ["Rape"] }
+  adult content:            { content: explicit }
+  adult rated:              { content: explicit }
+  rated adult:              { content: explicit }
+  r18:                      { content: explicit }
+  worldbuilding:            { tag: "Fictional World" }
+  world building:           { tag: "Fictional World" }
+  heavy lore:               { tag: "Fictional World" }
+  established relationship: { tag: "Protagonist in Relationship" }
+  already dating:           { tag: "Protagonist in Relationship" }
+  lesbian couple:           { tag: ["Girl x Girl Romance", "Protagonist in Relationship"] }
+  married couple:           { tag: "Protagonist in Relationship" }
+  enemies to lovers:        { tag: "Romance", ln: "Romance" }   # no VNDB tag; don't let "enemies" pick Major Antagonist
+  class trial:              { tag: "Courtroom" }
+  class trials:             { tag: "Courtroom" }
+  loops:                    { tag: "Time Loop" }
+  looping:                  { tag: "Time Loop" }
+  small village:            { tag: "Countryside" }
+  court intrigue:           { tag: "Intrigue" }
+  supernatural:             { any_tags: ["Ghost", "Youkai", "Superpowers"], ln: "Supernatural" }
+  day to day:               { tag: "Slice of Life", ln: "Slice of Life" }
+  daily life:               { tag: "Slice of Life", ln: "Slice of Life" }
+  quiet tone:               { tag: "Slice of Life", ln: "Slice of Life" }
+  giant robots:             { tag: "Mecha", ln: "Mecha" }
+  stats:                    { tag: "Raising Simulation" }
+  stat raising:             { tag: "Raising Simulation" }
+  raising sim:              { tag: "Raising Simulation" }
+  simulator:                { tag: "Simulation Game" }
+  route choices:            { tag: "Branching Plot" }
+  single heroine route:     { tag: "Only a Single Heroine" }
+  one heroine route:        { tag: "Only a Single Heroine" }
+  vr:                       { tag: "Virtual Reality" }
+  point-and-click:          { tag: "Point-and-Click Adventure Game" }
+  point-and-click adventure: { tag: "Point-and-Click Adventure Game" }
+  one girl:                 { tag: "Only a Single Heroine" }
+  only one girl:            { tag: "Only a Single Heroine" }
+  just one girl:            { tag: "Only a Single Heroine" }
+  one heroine:              { tag: "Only a Single Heroine" }
+  japanese folklore:        { tag: "Youkai" }
+  japanese folklore monsters: { tag: "Youkai" }
+  japanese monsters:        { tag: "Youkai" }
+  yokai:                    { tag: "Youkai" }
+  my sister:                { tag: "Protagonist's Sister as a Heroine" }
+  sister heroine:           { tag: "Protagonist's Sister as a Heroine" }
+  battles:                  { tag: "Combat", ln: "Action" }
+  battle:                   { tag: "Combat", ln: "Action" }
+  transgender:              { tag: "Transgender Characters" }
+  trans:                    { tag: "Transgender Characters" }
+  trans girl:               { tag: "Transgender Heroine" }
+  reverse harem:            { tag: ["Harem Ending", "Female Protagonist"], ln: "Male Harem" }
+  isekai:                   { tag: "Protagonist from a Different World", ln: "Isekai" }
+  cliffhanger:              { tag: "Cliffhanger Ending" }
+  cliffhanger ending:       { tag: "Cliffhanger Ending" }
+  read the sequel:          { tag: "Cliffhanger Ending" }
+  sequel bait:              { tag: "Cliffhanger Ending" }
+  to be continued:          { tag: "Cliffhanger Ending" }
+  good translation:         { lang: en }
+  oelvn:                    { lang: en }
+  oel:                      { lang: en }
+  cat:                      { tag: "Cats" }
+  cats:                     { tag: "Cats" }
+  his boss:                 { any_tags: ["Protagonist's Boss as a Heroine", "Protagonist's Boss as Hero"] }
+  my boss:                  { any_tags: ["Protagonist's Boss as a Heroine", "Protagonist's Boss as Hero"] }
+
   # --- light novels only (AniList names) ------------------------------
   harem romance:            { ln: { tag: ["Female Harem", "Romance"] } }
-  reverse harem:            { ln: "Male Harem" }
   otome isekai:             { ln: { tag: ["Isekai", "Female Protagonist"] } }
   akuyaku reijou:           { ln: "Villainess" }
   reincarnated:             { ln: "Reincarnation" }
-  reincarnated in another world: { ln: { tag: ["Isekai", "Reincarnation"] } }
-  transported to another world:  { ln: "Isekai" }
-  another world:            { ln: "Isekai" }
+  reincarnated in another world: { tag: "Protagonist from a Different World", ln: { tag: ["Isekai", "Reincarnation"] } }
+  transported to another world:  { tag: "Protagonist from a Different World", ln: "Isekai" }
+  another world:            { tag: "Protagonist from a Different World", ln: "Isekai" }
   academy:                  { ln: "School" }
   magic academy:            { ln: { tag: ["School", "Magic"] } }
   magic school:             { ln: { tag: ["School", "Magic"] } }
@@ -298,6 +419,9 @@ patterns:
     ln: "Historical"
   - pattern: '(?:los(?:e|es|t|ing)|forg[eo]t(?:s|ten)?)\s+(?:(?:his|her|their|my|your|all|of)\s+)*memor(?:y|ies)'
     tag: "Amnesia"
+  # "strong female protagonist" before the plain female-lead patterns eat "female protagonist"
+  - pattern: 'strong\s+(?:female|girl|woman)\s+(?:main\s+character|protagonist|protag|lead|mc)'
+    tag: "Strong Female Protagonist"
   - pattern: '(?:main\s+character|protagonist|protag|main\s+lead|lead|mc|hero)(?:\s+(?:is|being|should\s+be|must\s+be|would\s+be|has\s+to\s+be))?(?:\s+an?)?\s+(?:girl|woman|female|lady|gal)'
     tag: "Female Protagonist"
   - pattern: '(?:play(?:ing)?|playing)\s+as\s+(?:an?\s+)?(?:girl|woman|female|lady)'
@@ -317,9 +441,41 @@ patterns:
     tag: "20th Century"
   - pattern: 'choices?\s+(?:that\s+)?(?:really\s+|actually\s+|truly\s+)?(?:matter|affect|change|decide)'
     tag: "Branching Plot"
-  - pattern: 'reconnect(?:s|ing)?|reunit(?:e|ed|es|ing)|years\s+apart'
+  - pattern: '(?:reconnect\w*|reunit\w*)(?:\s+after\s+(?:many\s+|so\s+many\s+)?years(?:\s+apart)?)?|(?:after\s+)?(?:many\s+)?years\s+apart'
     tag: "Reunion"
 
+  # stakes: "people can die", "choices affect who survives"
+  - pattern: '(?:people|characters?|anyone|everyone|party\s+members?|heroines?|friends|you|mc|protagonist|protag|main\s+character)\s+(?:can|could|may|might|will)\s+(?:actually\s+|really\s+|permanently\s+)?die|who\s+(?:survives|lives|dies)|permadeath|perma-death'
+    any_tags: ["Life and Death Drama", "Death of Heroine", "Death of Protagonist"]
+  - pattern: 'low\s+stakes|stress[- ]free'
+    exclude_tags: ["Life and Death Drama"]
+  # "nothing bad happens": the negation splits off "nothing", so this side names the bad thing
+  - pattern: '(?:bad|sad|terrible|tragic)\s+(?:stuff\s+|things\s+)?(?:ever\s+)?happens?(?:\s+to\s+(?:anyone|anybody|them|the\s+characters))?'
+    tag: "Life and Death Drama"
+  # "starts as rom com then gets real dark": the turn, not the starting genre
+  - pattern: '(?:then|later|eventually|suddenly|but\s+then)\s+(?:gets?|turns?|becomes?|goes|takes\s+a)\s+(?:(?:real(?:ly)?|very|super|pretty|so|much|way)\s+)?(?:dark|sad|grim|twisted|serious|horror|disturbing)(?:\s+turn)?|genre\s+shift|tonal\s+shift|mood\s+whiplash|bait\s+and\s+switch'
+    tag: "Genre Shift"
+  - pattern: '(?:culprit|killer|murderer|answer|solution|truth)\s+(?:changes?|is\s+different|differs)\s+(?:per|each|every|by|in\s+each|depending\s+on\s+the)\s+route|different\s+(?:culprits?|killers?|solutions?)\s+(?:per|each|in\s+each|for\s+each)\s+route|(?:each|every)\s+route\s+reveals'
+    tag: "Multiple Route Mystery"
+  - pattern: 'locked\s+(?:behind|until|after)(?:\s+(?:other|all|the\s+other|every|finishing)(?:\s+\w+)?\s+routes?)?|unlock(?:s|ed)?\s+after\s+(?:other|all|the\s+other)\s+routes?'
+    tag: "Unlockable Routes"
+  - pattern: '(?:switch(?:es|ing)?|chang(?:es|ing)|shift(?:s|ing)?|alternat(?:es|ing)|multiple|different)\s+(?:between\s+)?(?:perspectives?|povs?|points?\s+of\s+view|narrators?)|(?:perspective|pov)\s+(?:switch|change|shift)(?:es|s|ing)?'
+    tag: "Changing Perspective"
+  - pattern: 'reliv(?:e|es|ing)\s+the\s+same\s+(?:day|week|days)|same\s+day\s+(?:over\s+and\s+over|again\s+and\s+again)|groundhog\s+day'
+    tag: "Time Loop"
+  - pattern: '(?:transported|summoned|reincarnated|sent|thrown|teleported|trapped|isekaied)\s+(?:in)?to\s+(?:an(?:other)?|a\s+different|a\s+fantasy|a\s+parallel|a\s+game)\s+world'
+    tag: "Protagonist from a Different World"
+    ln: "Isekai"
+  - pattern: 'heroines?\s+(?:is|are|being)\s+older\s+than\s+(?:the\s+)?(?:mc|protagonist|protag|main\s+character|me|him|you|the\s+hero)|older\s+heroines?|heroines?\s+(?:who\s+(?:is|are)\s+)?older\s+than'
+    tag: "Only Older Heroines"
+  - pattern: '(?:(?:over|above)\s+)?[3-9]0\s*\+?\s*(?:years?\s+old\s+|yo\s+)?(?:heroines?|women|ladies)'
+    tag: "Adult Heroine"
+  - pattern: 'date\s+other\s+(?:women|girls)|(?:girls?|women)\s+(?:who\s+)?(?:dat(?:e|ing)|lov(?:e|ing))\s+(?:other\s+)?(?:girls?|women)'
+    tag: "Girl x Girl Romance"
+  - pattern: 'real\s+ending|proper\s+ending|actual\s+ending|(?:a\s+)?complete\s+story'
+    exclude_tags: ["Cliffhanger Ending"]
+  - pattern: 'skippable\s+(?:h|sex)(?:[- ]?scenes?)?|(?:h|sex)[- ]?scenes?\s+(?:are\s+|is\s+)?(?:skippable|optional)'
+    tag: "In-game Sexual Content Toggle"
 # ---------------------------------------------------------------------------
 # traits: everyday words for a character trait, in VNDB's words, for any role.
 # When a sentence is about someone ("a girl that is short, kind of nerdy"),
@@ -328,6 +484,11 @@ patterns:
 # "tsundere", "maid", "flat chest") need no entry here.
 traits:
   nerdy: otaku
+  villain: villainous
+  evil: villainous
+  commander: officer
+  officer: officer
+  ugly bastard: ugly
   nerd: otaku
   geek: otaku
   geeky: otaku
@@ -390,3 +551,47 @@ traits:
   older sister type: oneesan-type
   little sister type: imouto-type
   rich girl: ojousama
+
+# ---------------------------------------------------------------------
+# related: groups of tags that stand in for each other. When a search with
+# every tag finds too little, a wanted tag is first swapped for the others in
+# its group (ranked below exact matches), before it is left out entirely.
+related:
+  - ["Time Loop", "Time Travel"]
+  - ["Mind Screw", "Psychological Horror", "Madness", "Delusion"]
+  - ["Utsuge", "Nakige", "Death of Heroine", "Terminal Illness"]
+  - ["Horror", "Psychological Horror", "Body Horror", "Lovecraftian Horror", "Haunted House"]
+  - ["Lovecraftian Horror", "Cthulhu Mythos"]
+  - ["Vampire", "Werewolf", "Youkai", "Demons"]
+  - ["Ghost", "Youkai", "Afterlife", "Possession"]
+  - ["Science Fiction", "Space", "Spaceship", "Robots", "Near Future"]
+  - ["Cyberpunk", "Dystopia", "Near Future", "Hacking"]
+  - ["Post Apocalyptic Earth", "Apocalypse", "Dystopia", "Survival Focus"]
+  - ["Witch Heroine", "Witch Protagonist", "Magic School", "Alchemy"]
+  - ["High Fantasy", "Dark Fantasy", "Past Setting in a Fictional World", "Mythical Setting"]
+  - ["Protagonist from a Different World", "Summoning", "Confinement in a Simulated Reality"]
+  - ["Virtual Reality", "Confinement in a Simulated Reality"]
+  - ["Slice of Life", "Slice of Life Comedy", "School Life Comedy"]
+  - ["Comedy", "Slice of Life Comedy", "School Life Comedy", "Absurdist Comedy", "Slapstick", "Parody"]
+  - ["Black Comedy", "Satire", "Absurdist Comedy"]
+  - ["Courtroom", "Detective Work", "Mystery"]
+  - ["Death Game", "Survival Focus", "Life and Death Drama"]
+  - ["Sword Combat", "Combat with Bladed Weapons", "Personal Armed Combat", "Duel"]
+  - ["Magic/ESP Combat", "Superpowers", "ESP"]
+  - ["Military", "War", "Rebellion"]
+  - ["Amnesia", "Memory Alteration"]
+  - ["Deities", "Mythical Setting", "Greek Mythology"]
+  - ["Dragon", "Fictional Beings"]
+  - ["Body Swapping", "Sex Change", "Gender Bending"]
+  - ["Conspiracy", "Intrigue", "Political Corruption"]
+  - ["School Festival", "Festival"]
+  - ["Snow", "Winter"]
+  - ["Beach", "Summer"]
+  - ["Cult", "Religious Organization"]
+  - ["Unrequited Love", "Love Triangle", "Dramatic Love Triangle"]
+  - ["Forbidden Love", "Secret Romance", "Student-Teacher Romance"]
+  - ["Cats", "Talking Animal", "Animals"]
+  - ["Bullying", "Discrimination"]
+  - ["Psychological Trauma", "Clinical Depression", "Desperation"]
+  - ["Countryside", "Homecoming"]
+  - ["Journey", "Odyssey", "On the Run"]

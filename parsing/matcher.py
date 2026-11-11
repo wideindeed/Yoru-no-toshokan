@@ -34,6 +34,7 @@ class Synonyms:
         self.warnings = warnings
         self.patterns = patterns or []      # (compiled regex, criterion templates)
         self.traits = traits or {}          # everyday word -> trait in VNDB's words ("nerdy" -> "otaku")
+        self.related: dict[str, set[str]] = {}   # tag id -> related tag ids (fallbacks)
 
     def get(self, phrase: str) -> list[Criterion] | None:
         return self.entries.get(phrase.strip().lower())
@@ -81,6 +82,11 @@ class Synonyms:
                 t = resolve(name, key)
                 if t:
                     out.append(Criterion("tag", t.id, t.name, exclude=True, min_level=lvl))
+            if e.get("mood"):   # a vague mood word: a soft ranking hint, never a filter
+                ts = [t for n in as_list(e["mood"]) if (t := resolve(n, key))]
+                if ts:
+                    out.append(Criterion("tag_any", [t.id for t in ts], e.get("label") or key.title(),
+                                         soft=True))
             if e.get("engine"):
                 out.append(Criterion("engine", e["engine"], f"Engine: {e['engine']}"))
             if e.get("lang"):
@@ -156,8 +162,15 @@ class Synonyms:
         else:
             for w in warnings:
                 log("WARNING: " + w)
+        related: dict[str, set[str]] = {}   # tag id -> ids of tags in the same "related" group
+        for group in raw.get("related") or []:
+            ids = {t.id for n in group if (t := resolve(n, "related"))}
+            for i in ids:
+                related.setdefault(i, set()).update(ids - {i})
         traits = {str(k).strip().lower(): str(v).strip().lower() for k, v in (raw.get("traits") or {}).items()}
-        return cls(entries, warnings, patterns, traits)
+        syn = cls(entries, warnings, patterns, traits)
+        syn.related = related
+        return syn
 
 
 # ------------------------------------------------------------------ matcher

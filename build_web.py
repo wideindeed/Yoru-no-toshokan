@@ -17,7 +17,7 @@ from vndb.tags import TAGS_PATH, load_tag_index
 SITE = ROOT / "site"
 PY_FILES = ["settings.py", "config.yaml", "query_builder.py", "details.py", "like.py",
             "parsing/__init__.py", "parsing/model.py", "parsing/rules.py", "parsing/matcher.py",
-            "parsing/parser.py", "parsing/tag_browser.py", "parsing/synonyms.yaml",
+            "parsing/parser.py", "parsing/tag_browser.py", "parsing/synonyms.yaml", "parsing/synonyms.generated.yaml",
             "vndb/__init__.py", "vndb/tags.py", "vndb/labels.py",
             "anilist/__init__.py", "anilist/tags.py", "anilist/query.py"]
 WEB_PY = ["web.py", "rapidfuzz/__init__.py", "rapidfuzz/fuzz.py", "rapidfuzz/process.py"]
@@ -32,8 +32,20 @@ def _anilist():
     return AniListClient(load_config())
 
 
+def _check_all_ages():
+    """The site is all ages: refuse to ship a generated phrase that points at an adult (ero) tag."""
+    import yaml
+    from vndb.tags import read_tags
+    ero = {t.name for t in read_tags()[1] if t.category == "ero"}
+    gen = yaml.safe_load((ROOT / "parsing" / "synonyms.generated.yaml").read_text(encoding="utf-8"))["phrases"]
+    bad = sorted(k for k, v in gen.items() if v in ero)
+    if bad:
+        raise SystemExit(f"synonyms.generated.yaml has adult phrases, not building: {bad[:10]}")
+
+
 def main():
     load_tag_index()   # refreshes data/tags.json if it's missing or older than tag_refresh_days
+    _check_all_ages()
     al_tags.load_tag_index(_anilist())   # same for data/anilist_tags.json (light novels)
     if SITE.exists():
         shutil.rmtree(SITE)

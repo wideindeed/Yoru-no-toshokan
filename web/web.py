@@ -96,10 +96,7 @@ def _body(crits, sort, mode, page, hidden) -> dict:
 
 def cards(results_json: str, criteria_json: str, mode: str) -> str:
     groups = qb.wanted_tag_groups(_crits(criteria_json))
-    out = [qb.to_card(v, cfg, groups, False) for v in json.loads(results_json)]
-    if mode == "any" and groups:
-        out.sort(key=lambda c: -c["hits"])
-    return json.dumps(out)
+    return json.dumps(qb.order([qb.to_card(v, cfg, groups, False) for v in json.loads(results_json)], mode))
 
 
 def detail(vn_json: str) -> str:

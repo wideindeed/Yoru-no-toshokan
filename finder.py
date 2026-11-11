@@ -107,8 +107,7 @@ class Finder:
                                  reverse=reverse, results=n, page=page)
         groups = qb.wanted_tag_groups(criteria)
         cards = [qb.to_card(v, self.cfg, groups, mature) for v in data.get("results", [])]
-        if mode == "any" and groups:
-            cards.sort(key=lambda c: -c["hits"])   # stable: keeps API order within a hit count
+        cards = qb.order(cards, mode)
         notes = []
         if mode == "all" and page == 1 and len(cards) < n:
             # too few have every tag: add the closest matches (all tags but one, then two...)

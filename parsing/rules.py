@@ -14,9 +14,9 @@ from parsing.model import Criterion
 # Separators and clause words. Each piece is parsed on its own, and a
 # negation only reaches to the end of its own piece.
 _SPLIT_RE = re.compile(
-    r"[,;\n:+&|!?]|\.\s|\.$"
+    r"[,;\n:&|!?]|(?<!\d)\+|\.\s|\.$"
     r"|\s+(?:and|but|plus|also|that|which|where|while|though|although|ideally|preferably|whereas)\s+"
-    r"|(?<!\bnothing)(?<!\bno)(?<!\bany)(?<!\banything)\s+with\s+|^with\s+",
+    r"|(?<!\bmess)(?<!\bmesses)(?<!\bmessing)(?<!\bnothing)(?<!\bno)(?<!\bany)(?<!\banything)\s+with\s+|^with\s+",
     re.I,
 )
 _NEG_RE = re.compile(
@@ -24,6 +24,7 @@ _NEG_RE = re.compile(
 )
 # A negation trigger anywhere in a clause; everything after it is excluded.
 # "not too/very/that ..." is a degree, not a negation (handled by rules).
+# The parser turns "not too dark" into "not dark" first: mood hints only re-rank.
 _NEG_ANY_RE = re.compile(
     r"(?<![\w'])(?:"
     r"no|not|without|never|nothing|non"
@@ -58,6 +59,9 @@ setting set themes theme elements element vibe vibes feel feeling atmosphere
 made using built engine version
 oh ah uh um hmm well yeah yes ok okay too much many more bit little
 few see world main character characters protagonist
+only first heavy themed style hybrid rated make even quick end go start starts started
+two route routes art interest interests companion original
+detailed release play couple couples
 good great fine whats what's someone anyone once deal lol lmao pls plz tho
 """.split())
 
@@ -82,13 +86,14 @@ FILLER = {
 }
 _FILLER_ALT = "|".join(map(re.escape, sorted(FILLER, key=len, reverse=True)))
 _FILLER_EDGE_RE = re.compile(
-    rf"^(?:(?:{_FILLER_ALT})\b\W*)+|(?:\W*\b(?:{_FILLER_ALT}))+$", re.I
-)
+    rf"^(?:(?:{_FILLER_ALT})\b\W*)+|(?:(?<!\blight)(?<!\blight\s)\W*\b(?:{_FILLER_ALT}))+$", re.I
+)   # "a light novel" keeps its "novel" (else it reads as the "light" mood)
 _BETWEEN_RE = re.compile(r"\bbetween\s+((?:19|20)\d{2})\s+and\s+((?:19|20)\d{2})\b", re.I)
 
 
 def split_phrases(text: str) -> list[str]:
     text = _BETWEEN_RE.sub(r"\1-\2", text)  # keep year ranges intact through the " and " split
+    text = re.sub(r"\bpoint\s+(?:and|&|n)\s+click\b", "point-and-click", text, flags=re.I)
     parts = _SPLIT_RE.split(text)
     return [p.strip(" \t-'\"!?()[]{}").strip() for p in parts if p and p.strip(" \t-.'\"")]
 
@@ -245,6 +250,7 @@ def _wb(p: str) -> re.Pattern:
 
 _HOURS_RE = _wb(r"(?:(under|less\s+than|below|at\s+most|max(?:imum)?|up\s+to|within|over|more\s+than|at\s+least|about|around)\s+)?"
                r"(\d+)\s*\+?\s*(?:h|hrs?|hours?)(?:\s+(?:long|max|or\s+(?:less|so)))?")
+_INTENSE_RE = _wb(r"(?:super|extremely|incredibly|insanely|really\s+really)\s+(long|short)")
 _NOISE_RE = _wb(r"on\s+(?:my\s+|a\s+)?(?:lunch|coffee)\s+break|for\s+once|type\s+deal")
 
 
@@ -272,10 +278,12 @@ _ENGINE_RES = [(_wb(r"(?:made\s+(?:in|with|using)\s+|built\s+(?:in|with)\s+)?(?:
                     + p + r")(?:\s+(?:engine|games?))?"), name) for p, name in ENGINES]
 
 _YEAR = r"((?:19|20)\d{2})"
-_RANGE_RE = _wb(r"(?:from\s+|between\s+)?" + _YEAR + r"\s*(?:-|–|to|until|and|through)\s*" + _YEAR)
+_RANGE_RE = _wb(r"(?:from\s+|between\s+)?" + _YEAR + r"\s*(?:-|–|to|until|and|through|or)\s*" + _YEAR)
 _AFTER_RE = _wb(r"(?:released\s+)?(after|since|from|newer\s+than|post|later\s+than)\s+" + _YEAR)
 _BEFORE_RE = _wb(r"(?:released\s+)?(before|until|till|older\s+than|pre|earlier\s+than|up\s+to)\s+" + _YEAR)
 _INYEAR_RE = _wb(r"(?:released\s+)?in\s+" + _YEAR + r"|" + _YEAR)
+_OR_LATER_RE = _wb(_YEAR + r"\s+(?:or|and)\s+(?:later|newer|after|onwards?|up|beyond|above)")
+_OR_EARLIER_RE = _wb(_YEAR + r"\s+(?:or|and)\s+(?:earlier|older|before|below)")
 _DECADE_RE = _wb(r"(?:the\s+)?(?:(19|20)?(\d)0)'?s")
 
 _HIGH_RATED_RE = _wb(
@@ -314,7 +322,9 @@ def _date_label(lo, hi) -> str:
 def extract(phrase: str, cfg: dict, exclude: bool = False, person: bool = False) -> RuleOutput:
     """person: the clause describes someone, so a bare "short" is their height, not the length."""
     out: list[Criterion] = []
-    text = phrase
+    # "2010 or later" -> "since 2010", "2015 or earlier" -> "until 2015"
+    text = _OR_LATER_RE.sub(r"since \1", phrase)
+    text = _OR_EARLIER_RE.sub(r"until \1", text)
 
     def add(kind, value, label, op="="):
         out.append(Criterion(kind=kind, value=value, label=label, op=op,
@@ -400,7 +410,7 @@ def extract(phrase: str, cfg: dict, exclude: bool = False, person: bool = False)
             add("length", 3, "Length: Medium or longer", op=">=")
         text = cut(m)
 
-    text = _NOISE_RE.sub(" ", text)
+    text = _INTENSE_RE.sub(r"very \1", _NOISE_RE.sub(" ", text))
     # "under 5 hours", "100 hours", "at least 30h"
     if m := _HOURS_RE.search(text):
         word, h = (m.group(1) or "").lower(), int(m.group(2))
@@ -419,7 +429,7 @@ def extract(phrase: str, cfg: dict, exclude: bool = False, person: bool = False)
     # so "long hair" or "short story collection" are left for the tag matcher.
     m = _LENGTH_RE.match(strip_filler(text))
     hours = any(c.kind == "length" for c in out)    # "short vn under 5 hours": the hours say it already
-    if m and person and m.group(0).lower() == m.group(1).lower():
+    if m and person and m.group(0).lower() == m.group(1).lower() != "very long":   # "very long" is never a height
         m = None
     if m:
         n = LENGTHS[m.group(1).lower()]

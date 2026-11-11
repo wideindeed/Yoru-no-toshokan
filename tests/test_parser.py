@@ -178,7 +178,8 @@ def test_conversational_vampires_rpgm_no_horror(parser):
     assert tag_ids(r, exclude=True) == {"g7"}        # NOT Horror (was included before M2.5)
     assert crit(r, "engine")[0].value == "RPG Maker"
     assert crit(r, "released")[0].value == [[">=", "2016-01-01"]]
-    assert r.unmatched == ["dark"]                   # no VNDB tag; reported, not guessed
+    assert [c.label for c in r.criteria if c.soft] == ["Dark"]   # a soft hint, never a filter
+    assert r.unmatched == []
 
 
 def test_scoped_negation(parser):

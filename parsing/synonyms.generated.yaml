@@ -1,13 +1,18 @@
 # GENERATED: extra everyday phrasings for VNDB tags. Do not edit by hand:
 # put fixes in synonyms.yaml, which always wins over this file.
 phrases:
+  victorian: 19th Century
   twentieth century: 20th Century
+  modern era: 21st Century
+  present day era: 21st Century
+  absurdist: Absurdist Comedy
+  nonsense humor: Absurdist Comedy
+  random humor: Absurdist Comedy
   action packed: Action
   action gameplay: Action Game
   action segments: Action Game
   real time combat: Action Game
   adapted from: Adaptation
-  adult love interest: Adult Hero
   older guy love interest: Adult Hero
   older love interest: Adult Hero
   grown woman: Adult Heroine
@@ -17,26 +22,58 @@ phrases:
   older women: Adult Heroine
   grown up protagonist: Adult Protagonist
   older protagonist: Adult Protagonist
+  after death: Afterlife
+  life after death: Afterlife
+  purgatory: Afterlife
+  spirit world: Afterlife
   airheaded: Airhead Heroine
   ditz: Airhead Heroine
+  alchemist: Alchemy
+  alcoholic: Alcoholism
+  drinking problem: Alcoholism
+  all a dream: All Just a Dream
+  it was all a dream: All Just a Dream
+  girls academy: All-girls School
   alternate universe: Alternate Dimensions
   multiverse: Alternate Dimensions
   parallel world: Alternate Dimensions
   parallel worlds: Alternate Dimensions
   forgot everything: Amnesia
   angelic: Angels
+  humanized objects: Anthropomorphized Inanimate Object
+  objects as people: Anthropomorphized Inanimate Object
+  apartment: Apartment Building
+  living in an apartment: Apartment Building
+  betrothed: Arranged Marriage
+  forced marriage: Arranged Marriage
+  political marriage: Arranged Marriage
   a.i: Artificial Intelligence
   sentient ai: Artificial Intelligence
   sentient machines: Artificial Intelligence
   bad end: Bad Ending(s)
   bad ends: Bad Ending(s)
+  based on a true: Based on Actual Events
+  real events: Based on Actual Events
+  'true': Based on Actual Events
+  true story: Based on Actual Events
+  mind: Battle of Wits
+  mind game: Battle of Wits
+  mind games: Battle of Wits
+  outsmarting each other: Battle of Wits
+  beach episode: Beach
+  seaside: Beach
   betrayed: Betrayal
   traitor: Betrayal
+  morbid humor: Black Comedy
   grayscale: Black and White
   blood everywhere: Bloody Scenes
   bloodshed: Bloody Scenes
   bloody: Bloody Scenes
   lots of blood: Bloody Scenes
+  flesh horror: Body Horror
+  grotesque transformations: Body Horror
+  mutation: Body Horror
+  body swap: Body Swapping
   river: Body of Water
   bonus: Bonus Side Stories
   bonus stories: Bonus Side Stories
@@ -52,7 +89,6 @@ phrases:
   mlm: Boy x Boy Romance
   pure bl: Boy x Boy Romance Only
   branching paths: Branching Plot
-  branching routes: Branching Plot
   choices that matter: Branching Plot
   4th wall: Breaking the Fourth Wall
   breaks the fourth wall: Breaking the Fourth Wall
@@ -64,32 +100,66 @@ phrases:
   bully: Bullying
   coffee house: Cafe
   coffee shop: Cafe
+  cannibals: Cannibalism
+  eating people: Cannibalism
   censored: Censored Text
+  promise from childhood: Childhood Promise
+  promised as kids: Childhood Promise
+  cathedral: Church
+  chapel: Church
+  combat party: Combat Capable Friends
+  fighting party: Combat Capable Friends
+  friends who can fight: Combat Capable Friends
   blades: Combat with Bladed Weapons
   knife fights: Combat with Bladed Weapons
-  swordplay: Combat with Bladed Weapons
+  firearms: Combat with Firearms
+  gun fights: Combat with Firearms
+  gunfights: Combat with Firearms
+  guns: Combat with Firearms
+  shootouts: Combat with Firearms
   comedic: Comedy
   funny: Comedy
   hilarious: Comedy
   humorous: Comedy
   lighthearted comedy: Comedy
   makes me laugh: Comedy
+  coming of age: Coming-of-Age Drama
+  coming-of-age: Coming-of-Age Drama
+  coming-of-age story: Coming-of-Age Drama
+  competitive: Competition
   can't escape: Confinement
   held captive: Confinement
   imprisoned: Confinement
   locked in: Confinement
   locked up: Confinement
+  simulated reality: Confinement in a Simulated Reality
+  stuck in a: Confinement in a Simulated Reality
+  stuck in a game: Confinement in a Simulated Reality
+  cover up: Conspiracy
+  shadow government: Conspiracy
+  artificial beings: Constructs
+  automatons: Constructs
+  fantasy in modern times: Contemporary Fantasy
+  big company: Corporations
+  corporate: Corporations
+  megacorp: Corporations
   cosplayer: Cosplay
   cosplaying: Cosplay
   small town: Countryside
+  crime syndicate family: Crime Family
   boy in a dress: Cross-dressing
   crossdresser: Cross-dressing
   dressed as a girl: Cross-dressing
   otokonoko: Cross-dressing
+  cross over: Crossover
+  cthulhu: Cthulhu Mythos
+  grimdark: Dark Fantasy
   girl dies: Death of Heroine
   main character dies: Death of Protagonist
   mc dies: Death of Protagonist
   you die: Death of Protagonist
+  loan shark: Debt
+  owing money: Debt
   demoness: Demon Heroine
   devil girl: Demon Heroine
   female demon: Demon Heroine
@@ -97,10 +167,20 @@ phrases:
   devils: Demons
   fiends: Demons
   lovey dovey girl: Deredere Heroine
+  gore descriptions: Descriptions of Violence
+  despair: Desperation
+  hopeless: Desperation
   investigating: Detective Work
   investigation: Detective Work
   solving cases: Detective Work
+  missing person: Disappearance
+  someone goes missing: Disappearance
+  vanished: Disappearance
   divine creatures: Divine Beings
+  abusive husband: Domestic Violence
+  abusive relationship: Domestic Violence
+  house: Domicile
+  house setting: Domicile
   clueless protagonist: Donkan Protagonist
   dense mc: Donkan Protagonist
   dense protagonist: Donkan Protagonist
@@ -108,16 +188,44 @@ phrases:
   oblivious protagonist: Donkan Protagonist
   dramatic: Drama
   dramatic story: Drama
+  caught between two people: Dramatic Love Triangle
+  big character development: Drastic Character Development (positive)
+  character development: Drastic Character Development (positive)
+  character growth: Drastic Character Development (positive)
+  zero to hero: Drastic Character Development (positive)
   dreamworld: Dream
+  drugs: Drug Use
+  one on one fights: Duel
+  dystopian future: Dystopia
+  totalitarian society: Dystopia
+  mind reading: ESP
+  psychics: ESP
+  telekinesis: ESP
   branches early: Early Branching Plot
+  learning: Educational
+  learning game: Educational
+  teaches you something: Educational
   hyper girl: Energetic Heroine
+  virus outbreak: Epidemic
   chapter based: Episodic Story
   episodes: Episodic Story
   episodic: Episodic Story
+  european: Europe
+  european setting: Europe
+  existential dread: Existential Crisis
+  meaning of life: Existential Crisis
+  exorcist: Exorcism
+  exorcists: Exorcism
   ufo: Extraterrestrial
   ufos: Extraterrestrial
+  fairytale retelling: Fairy Tale
+  framed: Falsely Accused
+  prove innocence: Falsely Accused
+  wrongly accused: Falsely Accused
   family bonds: Family
   family life: Family
+  family issues: Family Drama
+  family problems: Family Drama
   fangame: Fan-fiction
   fanmade: Fan-fiction
   mini: Fast Mini-games
@@ -125,33 +233,42 @@ phrases:
   mini-games: Fast Mini-games
   dad character: Father Support Character
   father figure: Father Support Character
+  afraid of dying: Fear of Death
   main girl: Female Protagonist
-  culture festival: Festival
   matsuri: Festival
   barely any choices: Few Choices
   hardly any choices: Few Choices
+  magical creatures: Fictional Beings
+  monsters and creatures: Fictional Beings
+  mythical creatures: Fictional Beings
+  alternate modern earth: Fictional Modern Day Earth
+  modern fictional world: Fictional Modern Day Earth
   invented world: Fictional World
   made up world: Fictional World
   original world: Fictional World
-  battle girl: Fighting Heroine
   girl who fights: Fighting Heroine
   warrior girl: Fighting Heroine
   mc who fights: Fighting Protagonist
   cooking: Food Discussions
   cuisine: Food Discussions
   food: Food Discussions
+  star crossed lovers: Forbidden Love
+  star-crossed lovers: Forbidden Love
+  taboo love: Forbidden Love
   foreign girl: Foreigner Heroine
   friends: Friendship
   power of friendship: Friendship
   anthro: Furry
   kemono: Furry
   futuristic setting: Future
-  body swap: Gender Bending
+  futuristic japan: Future Japan
   gender swap: Gender Bending
   genderswap: Gender Bending
   tsf: Gender Bending
   turned into a boy: Gender Bending
   turned into a girl: Gender Bending
+  genetic engineering: Genetic Research
+  genetic experiments: Genetic Research
   prodigy girl: Genius Heroine
   apparition: Ghost
   haunted: Ghost
@@ -160,7 +277,6 @@ phrases:
   spirits: Ghost
   female x female: Girl x Girl Romance
   wlw: Girl x Girl Romance
-  only girls love: Girl x Girl Romance Only
   dismemberment: Gore
   gory: Gore
   grotesque: Gore
@@ -168,10 +284,14 @@ phrases:
   brutal violence: Graphic Violence
   extreme violence: Graphic Violence
   gory violence: Graphic Violence
+  greek myths: Greek Mythology
   circle of friends: Group of Friends
+  spooky season: Halloween
   end with all the girls: Harem Ending
-  harem end: Harem Ending
+  haunted home: Haunted House
   medic girl: Healer Heroine
+  chronic illness: Health Issues
+  hospital stays: Health Issues
   single mom: Heroine with Children
   single mother: Heroine with Children
   meganekko: Heroine with Glasses
@@ -181,16 +301,29 @@ phrases:
   swimsuit: Heroine with Swimsuits
   swimsuits: Heroine with Swimsuits
   high school life: High School
+  back to hometown: Homecoming
+  coming home: Homecoming
+  hometown return: Homecoming
   pop idol: Idol Heroine
   imouto: Imouto-type Heroine
   cheating partner: Infidelity
   unfaithful: Infidelity
+  chat rooms: Internet
+  internet culture: Internet
+  online friends: Internet
+  cross species romance: Interracial/interspecies Romance
+  human and monster romance: Interracial/interspecies Romance
+  interracial romance: Interracial/interspecies Romance
+  interspecies romance: Interracial/interspecies Romance
   political intrigue: Intrigue
   scheming: Intrigue
+  idol industry: Japanese Idols
   japanese legends: Japanese Mythology
   japanese myths: Japanese Mythology
   shinto: Japanese Mythology
   jealous lover: Jealousy
+  on the road: Journey
+  traveling: Journey
   animal ears: Kemonomimi
   animal girl: Kemonomimi
   animal girls: Kemonomimi
@@ -202,30 +335,63 @@ phrases:
   just reading: Kinetic Novel
   read only: Kinetic Novel
   zero choices: Kinetic Novel
+  first kiss: Kissing Scene
+  kiss: Kissing Scene
+  kiss scenes: Kissing Scene
+  kisses: Kissing Scene
+  kissing: Kissing Scene
+  coming out: LGBTQ Issues
+  lgbt: LGBTQ Issues
+  lgbt themes: LGBTQ Issues
+  lgbtq: LGBTQ Issues
+  lgbtq themes: LGBTQ Issues
+  queer: LGBTQ Issues
+  queer issues: LGBTQ Issues
+  queer themes: LGBTQ Issues
+  lab: Laboratory
+  research lab: Laboratory
   one path: Linear Plot
   straight: Linear Plot
   straight story: Linear Plot
   choice heavy: Lots of Choices
   lots of decisions: Lots of Choices
   tons of choices: Lots of Choices
+  choose love interest gender: Love Interest's Gender Choice
+  pick the love interest's gender: Love Interest's Gender Choice
   true love wins: Love Overcomes All
   love rival: Love Rivalry
   love rivals: Love Rivalry
   romantic rival: Love Rivalry
   triangle romance: Love Triangle
+  eldritch: Lovecraftian Horror
+  lovecraft: Lovecraftian Horror
+  lovecraftian: Lovecraftian Horror
+  descent into madness: Madness
+  going insane: Madness
+  losing their mind: Madness
+  mentally unhinged: Madness
   magical: Magic
   spellcasting: Magic
   spells: Magic
   witchcraft: Magic
+  witch academy: Magic School
+  wizard school: Magic School
+  magic fights: Magic/ESP Combat
+  psychic battles: Magic/ESP Combat
+  spell combat: Magic/ESP Combat
   main guy: Male Protagonist
-  ends with marriage: Marriage Ending
   getting married ending: Marriage Ending
-  marriage end: Marriage Ending
   hitozuma: Married Heroine
+  killing spree: Mass Murder
+  massacre: Mass Murder
+  servant and master: Master and Servant
   medieval: Medieval Fantasy
   medieval setting: Medieval Fantasy
   medieval times: Medieval Fantasy
   sword and sorcery: Medieval Fantasy
+  fake memories: Memory Alteration
+  memories erased: Memory Alteration
+  memory wipe: Memory Alteration
   meta: Metafiction
   meta fiction: Metafiction
   self aware: Metafiction
@@ -233,6 +399,8 @@ phrases:
   self-aware story: Metafiction
   shrine maiden: Miko Heroine
   shrine maidens: Miko Heroine
+  armed forces: Military
+  army: Military
   brainwashed: Mind Control
   hypnotized: Mind Control
   contemporary: Modern Day
@@ -240,10 +408,21 @@ phrases:
   modern times: Modern Day
   nowadays: Modern Day
   contemporary japan: Modern Day Japan
+  set in tokyo: Modern Day Tokyo
+  tokyo: Modern Day Tokyo
+  america: Modern Day United States of America
+  american: Modern Day United States of America
+  american setting: Modern Day United States of America
+  set in america: Modern Day United States of America
+  united states: Modern Day United States of America
+  usa: Modern Day United States of America
   monmusu: Monster Heroine
+  hunting monsters: Monster Hunters
+  monster hunting: Monster Hunters
   creatures: Monsters
   dozens of endings: More Than Seven Endings
   tons of endings: More Than Seven Endings
+  huge cast of guys: More Than Seven Heroes
   big cast of girls: More Than Seven Heroines
   lots of girls: More Than Seven Heroines
   lots of heroines: More Than Seven Heroines
@@ -258,7 +437,6 @@ phrases:
   many protagonists: Multiple Protagonists
   multiple main characters: Multiple Protagonists
   multiple mcs: Multiple Protagonists
-  multiple povs: Multiple Protagonists
   several protagonists: Multiple Protagonists
   murder case: Murder Mystery
   solve the murder: Murder Mystery
@@ -267,10 +445,13 @@ phrases:
   whodunnit: Murder Mystery
   buff guy: Muscular Hero
   hunk: Muscular Hero
-  muscular love interest: Muscular Hero
   guitarist: Musician Heroine
   mysterious: Mystery
   mysterious story: Mystery
+  legendary world: Mythical Setting
+  mythological: Mythical Setting
+  mythological setting: Mythical Setting
+  world of myths: Mythical Setting
   full screen text: NVL
   choose your name: Nameable Protagonist
   custom name: Nameable Protagonist
@@ -278,25 +459,48 @@ phrases:
   name your character: Nameable Protagonist
   rename the protagonist: Nameable Protagonist
   no love: No Romance Plot
+  enby: Non-Binary Characters
+  genderqueer: Non-Binary Characters
+  nonbinary: Non-Binary Characters
+  they/them characters: Non-Binary Characters
+  enby love interest: Non-Binary Love Interest
+  nonbinary romance: Non-Binary Love Interest
+  abused as a child: Non-sexual Child Abuse
+  abusive parents: Non-sexual Child Abuse
   obsessed: Obsession
   noble girl: Ojousama Heroine
   ojou sama: Ojousama Heroine
   posh girl: Ojousama Heroine
+  fugitive: On the Run
+  fugitives: On the Run
   one true ending: One True End
   true end: One True End
   true ending: One True End
+  all adult love interests: Only Adult Heroes
+  grown up love interests: Only Adult Heroes
   all happy endings: Only Good Endings
-  happy endings only: Only Good Endings
-  only happy endings: Only Good Endings
-  only one happy ending: Only One Good Ending
-  one heroine: Only a Single Heroine
   one love interest: Only a Single Heroine
-  only one heroine: Only a Single Heroine
+  bath house: Onsen
   ambiguous ending: Open Ending(s)
   open ended: Open Ending(s)
+  non monogamous: Open Relationship
+  poly relationship: Open Relationship
+  polyamorous relationship: Open Relationship
   orphaned protagonist: Orphan Protagonist
+  side job: Part-time Job
+  working part time: Part-time Job
+  spans years: Passage of Time
+  time passes: Passage of Time
+  years go by: Passage of Time
   olden days: Past
   real history: Past Earth
+  old europe: Past Europe
+  old fantasy world: Past Setting in a Fictional World
+  armed combat: Personal Armed Combat
+  weapon fighting: Personal Armed Combat
+  deep themes about life: Philosophy
+  existential: Philosophy
+  existential themes: Philosophy
   disability: Physical Problems
   injury: Physical Problems
   physical disability: Physical Problems
@@ -304,20 +508,27 @@ phrases:
   8 bit: Pixel Art
   pixel style: Pixel Art
   pixelated: Pixel Art
+  flower shop: Plants & Flowers
+  flowers: Plants & Flowers
+  gardening: Plants & Flowers
   cop: Police
   cops: Police
   policeman: Police
   policewoman: Police
+  corrupt politicians: Political Corruption
   political: Politics
+  date multiple people at once: Polyamory
+  more than one partner: Polyamory
+  poly romance: Polyamory
+  demonic possession: Possession
+  possessed: Possession
+  spirit possession: Possession
   choose your gender: Protagonist Gender Choice
   gender choice: Protagonist Gender Choice
   gender selection: Protagonist Gender Choice
   pick your gender: Protagonist Gender Choice
   different world: Protagonist from a Different World
-  isekai: Protagonist from a Different World
   other world: Protagonist from a Different World
-  summoned to another world: Protagonist from a Different World
-  mc already dating: Protagonist in Relationship
   mc in a relationship: Protagonist in Relationship
   protagonist has a girlfriend: Protagonist in Relationship
   depressed protagonist: Protagonist with Psychological Problems
@@ -326,13 +537,11 @@ phrases:
   childhood sweetheart: Protagonist's Childhood Friend as a Heroine
   osananajimi: Protagonist's Childhood Friend as a Heroine
   already a couple: Protagonist's Girlfriend as a Heroine
-  already dating: Protagonist's Girlfriend as a Heroine
   established couple: Protagonist's Girlfriend as a Heroine
   adopted sister: Protagonist's Non-blood-related Sister as a Heroine
   foster sister: Protagonist's Non-blood-related Sister as a Heroine
   step sister: Protagonist's Non-blood-related Sister as a Heroine
   stepsister: Protagonist's Non-blood-related Sister as a Heroine
-  romance with my sister: Protagonist's Sister as a Heroine
   romancing your sister: Protagonist's Sister as a Heroine
   sister romance: Protagonist's Sister as a Heroine
   sister route: Protagonist's Sister as a Heroine
@@ -353,9 +562,18 @@ phrases:
   leveling up: RPG
   role playing: RPG
   role playing game: RPG
+  rainy: Rain
+  rainy days: Rain
+  rainy season: Rain
+  rebels: Rebellion
   couple problems: Relationship Problems
   relationship drama: Relationship Problems
   relationship issues: Relationship Problems
+  church organization: Religious Organization
+  religious order: Religious Organization
+  brought back to life: Resurrection
+  coming back from the dead: Resurrection
+  revived: Resurrection
   avenge: Revenge
   payback: Revenge
   dating: Romance
@@ -364,27 +582,56 @@ phrases:
   love story: Romance
   romantic: Romance
   romantic story: Romance
+  date a whole family: Romancing a Family
   royalty: Royal Heroine
+  heroic sacrifice: Sacrifice
+  sacrificing themselves: Sacrifice
+  self sacrifice: Sacrifice
+  satirical: Satire
+  dorm: School Dormitory
+  dorm life: School Dormitory
+  dormitory: School Dormitory
+  dorms: School Dormitory
+  culture festival: School Festival
+  school fair: School Festival
+  campus comedy: School Life Comedy
+  athletics club: School Sports Club
+  sports club: School Sports Club
+  magic and technology: Science Fantasy
   sci fi: Science Fiction
   second person: Second-person Narrative
   second person pov: Second-person Narrative
   you are the protagonist: Second-person Narrative
+  double life: Secret Identity
+  hidden identity: Secret Identity
+  dating in secret: Secret Romance
+  hidden relationship: Secret Romance
+  secret relationship: Secret Romance
+  gender change: Sex Change
+  gender transformation: Sex Change
+  shapeshifter: Shapeshifting
+  shapeshifters: Shapeshifting
+  transforming into animals: Shapeshifting
+  shrine: Shinto Shrine
   bashful girl: Shy Heroine
   life sim: Simulation Game
   management sim: Simulation Game
-  raising sim: Simulation Game
   sim: Simulation Game
-  stat raising: Simulation Game
-  only one ending: Single Ending
-  daily life: Slice of Life
+  physical comedy: Slapstick
+  enslaved: Slavery
   everyday life: Slice of Life
   ordinary life: Slice of Life
   slice-of-life: Slice of Life
   sol: Slice of Life
   everyday comedy: Slice of Life Comedy
   sol comedy: Slice of Life Comedy
+  everyday drama: Slice of Life Drama
+  grounded drama: Slice of Life Drama
+  instagram: Social Networking Service
   outer space: Space
   athletic: Sports
+  springtime: Spring
+  being stalked: Stalking
   strategy: Strategy Game
   strategy gameplay: Strategy Game
   tactical: Strategy Game
@@ -392,27 +639,41 @@ phrases:
   tactics: Strategy Game
   after school club: Student Club
   club activities: Student Club
+  dating a teacher: Student-Teacher Romance
   commits suicide: Suicide
   self harm: Suicide
   summer break: Summer
   summer holiday: Summer
   summer vacation: Summer
+  camping trip: Summer Camp
+  summon: Summoning
   chibi: Super Deformed CGs
   chibi cgs: Super Deformed CGs
   caped heroes: Superheroes
   super heroes: Superheroes
+  female superhero: Superheroine
   special abilities: Superpowers
   special powers: Superpowers
   supernatural powers: Superpowers
+  trippy: Surreal
+  weird and surreal: Surreal
   nail biting: Suspense
   suspenseful: Suspense
   tense: Suspense
+  sword battles: Sword Combat
+  swordplay: Sword Combat
+  swordsman: Sword Combat
   girl with a sword: Sword Wielding Heroine
   sword girl: Sword Wielding Heroine
   swordswoman: Sword Wielding Heroine
+  taisho: Taishou Era
+  animals that talk: Talking Animal
+  talking cat: Talking Animal
   female teacher: Teacher Heroine
   hot teacher: Teacher Heroine
-  play as a teacher: Teacher Protagonist
+  incurable disease: Terminal Illness
+  only months to live: Terminal Illness
+  terrorist attack: Terrorism
   christmas: The Holiday Season
   holidays: The Holiday Season
   new year: The Holiday Season
@@ -422,6 +683,8 @@ phrases:
   third person narration: Third-person Narrative
   third person pov: Third-person Narrative
   thrilling: Thriller
+  timeskip: Time Jump
+  years later: Time Jump
   back in time: Time Travel
   going back in time: Time Travel
   time machine: Time Travel
@@ -429,9 +692,15 @@ phrases:
   boyish girl: Tomboy Heroine
   tomboyish girl: Tomboy Heroine
   torture scenes: Torture
+  railway: Trains
   tsun tsun: Tsundere Heroine
   twins: Twin Sisters as Heroines
   pigtails girl: Twin Tail Heroine
+  brawling: Unarmed Combat
+  fist fights: Unarmed Combat
+  fistfights: Unarmed Combat
+  hand to hand combat: Unarmed Combat
+  martial arts: Unarmed Combat
   undead creatures: Undead
   walking dead: Undead
   zombies: Undead
@@ -442,24 +711,27 @@ phrases:
   hidden routes: Unlockable Routes
   locked routes: Unlockable Routes
   secret routes: Unlockable Routes
+  unlock routes: Unlockable Routes
   nameless mc: Unnamed Protagonist
   nameless protagonist: Unnamed Protagonist
+  one sided love: Unrequited Love
+  one-sided crush: Unrequited Love
+  unrequited crush: Unrequited Love
+  creepypasta: Urban Legend
+  valentines: Valentine's Day
   bloodsucker: Vampire
   vamp: Vampire
   driving: Vehicles
   bad guy protagonist: Villainous Protagonist
-  evil main character: Villainous Protagonist
-  evil mc: Villainous Protagonist
-  play as the villain: Villainous Protagonist
-  villain mc: Villainous Protagonist
   brutal: Violence
   violent: Violence
   wartime: War
+  getting married: Wedding
+  marriage ceremony: Wedding
   manor: Western-style Manor
   mansion: Western-style Manor
   western mansion: Western-style Manor
   snowy: Winter
-  yandere love interest male: Yandere Hero
   crazy girlfriend: Yandere Heroine
   possessive girlfriend: Yandere Heroine
   japanese spirits: Youkai

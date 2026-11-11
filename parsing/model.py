@@ -34,16 +34,18 @@ class Criterion:
     method: str = ""                 # rule | synonym | exact | fuzzy | embedding
     score: float = 100.0
     id: int = 0                      # position in ParseResult.criteria (for chips)
+    soft: bool = False               # a mood hint ("dark", "cute"): re-ranks results, never filters them
+    related: list | None = None      # tag ids to try in place of this tag when too little matches
 
     def key(self) -> tuple:
         v = self.value
         if isinstance(v, list):
             v = tuple(tuple(x) if isinstance(x, list) else x for x in v)
-        return (self.kind, v, self.op, self.exclude)
+        return (self.kind, v, self.op, self.exclude, self.soft)
 
     @property
     def display(self) -> str:
-        return ("NOT: " if self.exclude else "") + self.label
+        return ("NOT: " if self.exclude else "") + ("~ " if self.soft else "") + self.label
 
     def to_dict(self) -> dict:
         d = asdict(self)
@@ -87,7 +89,7 @@ class ParseResult:
     def tag_ids(self, exclude: bool = False) -> list[str]:
         out = []
         for c in self.criteria:
-            if c.exclude != exclude:
+            if c.exclude != exclude or c.soft:     # mood hints are not filters
                 continue
             if c.kind == "tag":
                 out.append(c.value)
