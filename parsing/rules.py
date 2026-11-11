@@ -30,7 +30,7 @@ _NEG_ANY_RE = re.compile(
     r"|don'?t\s+(?:want|like|need|include)|do\s+not\s+(?:want|like|need|include)"
     r"|doesn'?t\s+(?:have|include|contain)|does\s+not\s+(?:have|include|contain)"
     r"|isn'?t|aren'?t|hate|dislike|avoid(?:ing)?|exclude|excluding|except|minus"
-    r"|free\s+of|lacking|skip"
+    r"|free\s+of|lacking|skip|tired\s+of|sick\s+of|fed\s+up\s+with|don'?t\s+have"
     r")(?![\w'])(?!\s+(?:too|very|that|overly|so|super)\b)[\s-]*",
     re.I,
 )
@@ -58,6 +58,7 @@ setting set themes theme elements element vibe vibes feel feeling atmosphere
 made using built engine version
 oh ah uh um hmm well yeah yes ok okay too much many more bit little
 few see world main character characters protagonist
+good great fine whats what's someone anyone once deal lol lmao pls plz tho
 """.split())
 
 # Kept for edge-stripping whole phrases (older, more conservative list).
@@ -134,8 +135,13 @@ def is_stop(token: str) -> bool:
     return token in STOPWORDS or singular(token) in STOPWORDS
 
 
+#  "not just a power fantasy", "isn't only h scenes": a hedge, neither wanted nor excluded
+_NOT_JUST_RE = re.compile(r"(?<![\w'])(?:not|isn'?t|aren'?t|wasn'?t)\s+(?:just|only|merely|simply|purely)\b.*$", re.I)
+
+
 def split_on_negation(clause: str) -> tuple[str, str | None]:
     """Split at the first negation trigger: (positive part, negated part or None)."""
+    clause = _NOT_JUST_RE.sub("", clause)
     m = _NEG_ANY_RE.search(clause)
     if not m or not clause[m.end():].strip():
         return clause, None
@@ -235,6 +241,15 @@ _LENGTH_RE = re.compile(
 
 def _wb(p: str) -> re.Pattern:
     return re.compile(r"(?<![\w'])(?:" + p + r")(?![\w'])", re.I)
+
+
+_HOURS_RE = _wb(r"(?:(under|less\s+than|below|at\s+most|max(?:imum)?|up\s+to|within|over|more\s+than|at\s+least|about|around)\s+)?"
+               r"(\d+)\s*\+?\s*(?:h|hrs?|hours?)(?:\s+(?:long|max|or\s+(?:less|so)))?")
+_NOISE_RE = _wb(r"on\s+(?:my\s+|a\s+)?(?:lunch|coffee)\s+break|for\s+once|type\s+deal")
+
+
+def _hours_bucket(h: int) -> int:
+    return 1 if h < 2 else 2 if h <= 10 else 3 if h <= 30 else 4 if h <= 50 else 5
 
 
 _LENGTH_NOUN_RE = _wb(r"(very short|very long|short|long)\s+(?:games?|vns?|visual novels?|reads?)")
@@ -385,15 +400,34 @@ def extract(phrase: str, cfg: dict, exclude: bool = False, person: bool = False)
             add("length", 3, "Length: Medium or longer", op=">=")
         text = cut(m)
 
+    text = _NOISE_RE.sub(" ", text)
+    # "under 5 hours", "100 hours", "at least 30h"
+    if m := _HOURS_RE.search(text):
+        word, h = (m.group(1) or "").lower(), int(m.group(2))
+        if word in ("under", "less than", "below", "at most", "max", "maximum", "up to", "within"):
+            n = _hours_bucket(h - 1) if h > 1 else 1
+            add("length", n, f"Length: {LENGTH_LABELS[n]}" + (" or shorter" if n > 1 else ""), op="<=")
+        elif word in ("over", "more than", "at least") or "+" in m.group(0):
+            n = _hours_bucket(h)
+            add("length", n, f"Length: {LENGTH_LABELS[n]}" + (" or longer" if n < 5 else ""), op=">=")
+        else:
+            n = _hours_bucket(h)
+            add("length", n, f"Length: {LENGTH_LABELS[n]}")
+        text = cut(m)
+
     # length: only when (nearly) the whole remaining phrase is a length word,
     # so "long hair" or "short story collection" are left for the tag matcher.
     m = _LENGTH_RE.match(strip_filler(text))
+    hours = any(c.kind == "length" for c in out)    # "short vn under 5 hours": the hours say it already
     if m and person and m.group(0).lower() == m.group(1).lower():
         m = None
     if m:
         n = LENGTHS[m.group(1).lower()]
-        add("length", n, f"Length: {LENGTH_LABELS[n]}")
+        if not hours:
+            add("length", n, f"Length: {LENGTH_LABELS[n]}")
         text = ""
+    elif hours:
+        text = _LENGTH_NOUN_RE.sub(" ", text)
     # ...or a length word naming the game itself inside a longer phrase
     # ("a short visual novel I can finish fast"); "short hair" still isn't one.
     elif m := _LENGTH_NOUN_RE.search(text):

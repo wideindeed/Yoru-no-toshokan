@@ -37,8 +37,11 @@ _SENTENCE_RE = re.compile(r"[.!?]\s|[.!?]$|[;\n]")
 _LIKE_RE = re.compile(
     r"(?:(?<![\w'])(?:something|anything|games?|vns?|visual\s+novels?|novels?|ones?|stuff|titles?|books?)"
     r"\s+(?:just\s+|kind\s+of\s+|a\s+bit\s+)?like|similar\s+to|in\s+the\s+(?:vein|style|spirit)\s+of"
-    r"|reminds?\s+me\s+of|^\s*like)\s+(?P<t>.+?)"
-    r"(?=\s*(?:[,.!?]|;\s|$|\s+(?:but|with|without|and\s+(?:no|not|with|without|also|in|on))\b))", re.I)
+    r"|reminds?\s+me\s+of|^\s*like|(?<![\w'])(?:kinda|sorta|kind\s+of|sort\s+of|a\s+bit)\s+like"
+    r"|(?<![\w'])(?:i|i've|ive|you|who|someone)\s+(?:only\s+|just\s+|really\s+)?(?:liked|loved|enjoyed|played|finished)"
+    r"|fans?\s+of)\s+(?P<t>.+?)"
+    r"(?=\s*(?:[,.!?]|;\s|$|\s+(?:but|with|without|that|which|where|who|because|cuz|since|so|lol|lmao|pls|please"
+    r"|and\s+(?:no|not|with|without|also|in|on))\b))", re.I)
 
 
 class QueryParser:
@@ -67,7 +70,8 @@ class QueryParser:
         "something like vampires" names a tag, not a title, so it is left to the tag matcher."""
         def one(m: re.Match) -> str:
             title = m["t"].strip(" '\"")
-            if not title or self.matcher.lookup_exact(title) or rules.is_empty_leftover(title):
+            if (not title or self.matcher.lookup_exact(title) or rules.is_empty_leftover(title)
+                    or title.split()[0].lower() in ("a", "an", "the", "his", "her", "my", "your", "their")):
                 return m[0]
             c = Criterion("like", title, f"Like: {title}", phrase=m[0].strip(), method="like")
             if res.add(c):

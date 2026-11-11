@@ -125,6 +125,15 @@ class Synonyms:
             elif len(warnings) == n_warn:   # nothing explained why it is empty
                 warnings.append(f"synonyms.yaml: entry {key!r} has no usable target; skipped")
 
+        # extra generated phrasings: VNDB only, hand-written entries win
+        gen = Path(path).with_name("synonyms.generated.yaml")
+        if not ln and gen.exists():
+            for key, name in ((yaml.safe_load(gen.read_text(encoding="utf-8")) or {}).get("phrases") or {}).items():
+                key = str(key).strip().lower()
+                t = index.by_name(name)
+                if key not in entries and t is not None:
+                    entries[key] = [Criterion("tag", t.id, t.name)]
+
         patterns = []
         for i, e in enumerate(raw.get("patterns") or []):
             src = (e or {}).get("pattern")
@@ -239,7 +248,7 @@ class TagMatcher:
             for suf in ROLE_SUFFIXES:
                 if name.endswith(" " + suf):
                     base = name[: -len(suf) - 1].strip()
-                    if len(base) >= 3:
+                    if len(base) >= 3 and base not in ("multiple", "main", "central", "major", "minor"):
                         self.families.setdefault(base, []).append(t.id)
                     break
         for ids in self.families.values():
@@ -325,6 +334,9 @@ class TagMatcher:
                 score_cutoff=self.threshold, limit=25,
             ):
                 sort_score = fuzz.token_sort_ratio(c, text)
+                if " " not in c and fuzz.ratio(singular(re.sub(r"\W", "", c)),
+                                               singular(re.sub(r"\W", "", text))) < 90:
+                    continue    # one word must look like a typo ("vampir"), not another word ("even"/"elven")
                 if (sort_score < self.min_sort or not _gender_compatible(c, text)
                         or not _differing_words_similar(c, text)):
                     continue

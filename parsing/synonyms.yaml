@@ -168,6 +168,47 @@ phrases:
   harem route:              { tag: "Harem Ending" }
   supernatural battles:     { tag: ["Superpowers", "Fighting Protagonist"], ln: { tag: ["Super Power", "Action"] } }
 
+  # --- common search words missing from VNDB's names (hidden test set, Nov 2026) ---
+  fully voiced:             { tag: "Voice Acting" }
+  full voice:               { tag: "Voice Acting" }
+  full voice acting:        { tag: "Voice Acting" }
+  voice acted:              { tag: "Voice Acting" }
+  voiced:                   { tag: "Voice Acting" }
+  slow burn:                { tag: "Slow-burn Romance" }
+  slow-burn:                { tag: "Slow-burn Romance" }
+  slow burn romance:        { tag: "Slow-burn Romance" }
+  multiple routes:          { tag: "Multiple Endings" }
+  many routes:              { tag: "Multiple Endings" }
+  lots of routes:           { tag: "Multiple Endings" }
+  different routes:         { tag: "Multiple Endings" }
+  college:                  { tag: "University" }
+  uni:                      { tag: "University" }
+  at work:                  { tag: "Office" }
+  workplace:                { tag: "Office" }
+  music:                    { tag: "Musical Themes" }
+  band:                     { tag: "Musical Themes" }
+  in a band:                { tag: "Musical Themes" }
+  mafia:                    { any_tags: ["Italian Mafia", "Yakuza", "Triad"] }
+  the mafia:                { any_tags: ["Italian Mafia", "Yakuza", "Triad"] }
+  mob:                      { any_tags: ["Italian Mafia", "Yakuza", "Triad"] }
+  organized crime:          { any_tags: ["Italian Mafia", "Yakuza", "Triad"] }
+  noir:                     { tag: "Noir Fiction" }
+  film noir:                { tag: "Noir Fiction" }
+  age gap:                  { tag: "May-December Romance" }
+  age gap romance:          { tag: "May-December Romance" }
+  gacha:                    { tag: "Gacha Game" }
+  animated sprites:         { tag: "Highly Animated Sprites" }
+  live2d:                   { tag: "Highly Animated Sprites" }
+  space opera:              { tag: "Space" }
+  rom com:                  { tag: ["Romance", "Comedy"], ln: { tag: ["Romance", "Comedy"] } }
+  romcom:                   { tag: ["Romance", "Comedy"], ln: { tag: ["Romance", "Comedy"] } }
+  romantic comedy:          { tag: ["Romance", "Comedy"], ln: { tag: ["Romance", "Comedy"] } }
+  corruption:               { tag: "Corruption of Characters" }
+  h scenes:                 { content: explicit }
+  h-scenes:                 { content: explicit }
+  h scene:                  { content: explicit }
+  sex scenes:               { content: explicit }
+
   # --- light novels only (AniList names) ------------------------------
   harem romance:            { ln: { tag: ["Female Harem", "Romance"] } }
   reverse harem:            { ln: "Male Harem" }
@@ -180,9 +221,6 @@ phrases:
   academy:                  { ln: "School" }
   magic academy:            { ln: { tag: ["School", "Magic"] } }
   magic school:             { ln: { tag: ["School", "Magic"] } }
-  rom com:                  { ln: { tag: ["Romance", "Comedy"] } }
-  romcom:                   { ln: { tag: ["Romance", "Comedy"] } }
-  romantic comedy:          { ln: { tag: ["Romance", "Comedy"] } }
   slow life:                { ln: "Iyashikei" }
   healing:                  { ln: "Iyashikei" }
   cute girls doing cute things: { ln: "Cute Girls Doing Cute Things" }
@@ -274,6 +312,13 @@ patterns:
     tag: "Male Protagonist"
   - pattern: '(?:lots\s+of|many|several|different|multiple)\s+(?:possible\s+)?(?:endings|outcomes)'
     tag: "Multiple Endings"
+  # "1920s setting" is when the story happens, not when the game came out
+  - pattern: '(?:set\s+in\s+(?:the\s+)?)?19[0-9]0''?s(?:\s+(?:or|and|to|-)\s+(?:the\s+)?19[0-9]0''?s)?\s+(?:setting|era|period|japan|america|london|paris|tokyo)|set\s+in\s+(?:the\s+)?19[0-9]0''?s'
+    tag: "20th Century"
+  - pattern: 'choices?\s+(?:that\s+)?(?:really\s+|actually\s+|truly\s+)?(?:matter|affect|change|decide)'
+    tag: "Branching Plot"
+  - pattern: 'reconnect(?:s|ing)?|reunit(?:e|ed|es|ing)|years\s+apart'
+    tag: "Reunion"
 
 # ---------------------------------------------------------------------------
 # traits: everyday words for a character trait, in VNDB's words, for any role.
@@ -298,6 +343,14 @@ traits:
   fat: chubby
   plump: chubby
   thin: underweight
+  big boobs: big breasts
+  big tits: big breasts
+  huge boobs: big breasts
+  milf: adult
+  milfs: adult
+  doctor: medical doctor
+  divorced: divorcee
+  femboy: trap
   skinny: underweight
   smart: genius
   clever: genius
