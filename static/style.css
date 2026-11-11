@@ -227,6 +227,13 @@ header.slim { display: flex; justify-content: space-between; align-items: center
 .cover.big img { height: auto; filter: none; }
 .vndb-link { margin-top: 6px; color: var(--amber); text-decoration: none; font: 15px var(--serif); }
 .vndb-link:hover { text-decoration: underline; }
+.like-link { color: var(--paper); font: 14px var(--serif); text-decoration: none; }
+.like-link::before { content: "≈ "; color: var(--amber-dim); }
+.like-link:hover { text-decoration: underline; }
+.why { color: var(--muted); font-size: 11px; margin: -3px 0 5px; }
+.why .miss { color: #c98b7e; }
+.listed { color: var(--amber); }
+.vlist-hide { display: block; margin-top: 8px; font-size: 13px; color: var(--muted); }
 .ext-link { font-size: 12px; color: var(--muted); text-decoration: none; }
 .ext-link:hover { color: var(--paper); }
 

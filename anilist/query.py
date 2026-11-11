@@ -19,7 +19,7 @@ from vndb.tags import TagIndex
 SORTS = {"rating": ["SCORE_DESC", "POPULARITY_DESC"], "votecount": ["POPULARITY_DESC"],
          "released": ["START_DATE_DESC", "POPULARITY_DESC"], "title": ["TITLE_ROMAJI"],
          "trending": ["TRENDING_DESC", "POPULARITY_DESC"]}
-UNSUPPORTED = {"lang", "platform", "engine", "length"}
+UNSUPPORTED = {"lang", "platform", "engine", "length", "tl"}
 MAX_VARIANTS = 8
 CARD_FIELDS = ("id title{romaji english native} startDate{year} averageScore popularity volumes status "
                "isAdult coverImage{large medium} genres tags{id name rank isMediaSpoiler isAdult} "
@@ -114,6 +114,8 @@ def build(crits: list[Criterion], index: TagIndex, cfg: dict, mode: str = "all",
                 base[f"{key}_greater"] = v - 1
         elif c.kind == "title":
             base["search"] = str(c.value)[:200]
+        elif c.kind == "id" and c.exclude:   # "not this one" (the title a like-search started from)
+            hidden = [*hidden, c.value]
     if skipped:
         notes.append("Not used for light novels: " + ", ".join(skipped) + ".")
 
@@ -210,8 +212,7 @@ def to_card(m: dict, cfg: dict, groups=(), show_explicit: bool = False) -> dict:
         "cover": cover.get("medium") or cover.get("large"),
         "cover_full": cover.get("large"),
         "blur": bool(m.get("isAdult")) and not show_explicit,
-        "hits": sum(1 for g in groups if qb._hit(g, _media_tags(m))),
-        "wanted": len(groups),
+        **qb.hit_summary(groups, _media_tags(m)),
     }
 
 

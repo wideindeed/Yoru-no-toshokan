@@ -15,7 +15,7 @@ from anilist import tags as al_tags
 from vndb.tags import TAGS_PATH, load_tag_index
 
 SITE = ROOT / "site"
-PY_FILES = ["settings.py", "config.yaml", "query_builder.py", "details.py",
+PY_FILES = ["settings.py", "config.yaml", "query_builder.py", "details.py", "like.py",
             "parsing/__init__.py", "parsing/model.py", "parsing/rules.py", "parsing/matcher.py",
             "parsing/parser.py", "parsing/tag_browser.py", "parsing/synonyms.yaml",
             "vndb/__init__.py", "vndb/tags.py", "vndb/labels.py",

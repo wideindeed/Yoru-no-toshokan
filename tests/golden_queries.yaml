@@ -1,0 +1,61 @@
+# Real sentences and what the parser must make of them (visual novel side).
+# got: chip labels in order. unmatched: words it should admit it did not understand.
+# When a change makes a line better, update the line; when it makes one worse, fix the change.
+- q: fantasy setting, female lead, multiple endings
+  got: [Fantasy, Female Protagonist, Multiple Endings]
+- q: a slice of life story with one ending, in english
+  got: [Slice of Life, Single Ending, English]
+- q: vampires, made in RPG Maker, no horror, after 2015
+  got: [Vampire, "Engine: RPG Maker", "NOT: Horror", Released 2016 or later]
+- q: highly rated mystery with time loops
+  got: [Rating ≥ 70, Mystery, Time Loop]
+- q: something like Ever17, short
+  got: ["Like: Ever17", "Length: Short"]
+- q: games similar to Steins;Gate but no romance
+  got: ["Like: Steins;Gate", "NOT: Romance"]
+- q: mystery in the vein of Danganronpa
+  got: ["Like: Danganronpa", Mystery]
+- q: something like vampires
+  got: [Vampire]
+- q: official english translation, romance comedy
+  got: [Official English translation, Romance, Comedy]
+- q: fan translated otome game
+  got: [Fan translation (English), Otome Game]
+- q: a girl that is short, nerdy
+  got: [Short Heroine, Otaku Heroine]
+- q: no sexual content, kinetic novel
+  got: [No Sexual Content, Kinetic Novel]
+- q: psychological horror, no gore, released before 2010
+  got: [Psychological Horror, "NOT: Gore", Released 2009 or earlier]
+- q: post-apocalyptic survival, long
+  got: [Post Apocalyptic Earth, Survival Focus, "Length: Long"]
+- q: time travel, multiple protagonists, very long
+  got: [Time Travel, Multiple Protagonists, "Length: Very long"]
+- q: female protagonist, yuri, no male protagonist
+  got: [Female Protagonist, Girl x Girl Romance, "NOT: Male Protagonist"]
+- q: cyberpunk detective in english made in renpy
+  got: ["Engine: Ren'Py", English, Cyberpunk, Detective Work]
+- q: a comedy where the protagonist is a girl
+  got: [Comedy, Female Protagonist]
+- q: murder mystery on an isolated island
+  got: [Murder Mystery, Island]
+  unmatched: [isolated]
+- q: nukige
+  got: [Nukige]
+- q: school life romance with a tsundere heroine
+  got: [School, Romance, Tsundere Heroine]
+- q: detective story set in a big city, adult protagonist
+  got: [Metropolitan Area, Detective Work, Adult Protagonist]
+- q: I want something dark and depressing with a bad ending
+  got: [Utsuge, Only Bad Endings]
+  unmatched: [dark]   # too vague to filter on; better reported than guessed
+- q: historical setting in japan, samurai
+  got: [Past Japan, "Samurai: Hero / Protagonist / Heroine"]
+- q: visual novel with a dating sim element on android
+  got: [Android, Dating Simulation]
+- q: otome game with a villainess protagonist
+  got: [Otome Game, Female Protagonist, Villainous Protagonist]
+- q: a villainess with a dark past
+  got: [Villainous Heroine, Psychological Trauma]
+- q: harem, comedy
+  got: [Harem Ending, Comedy]

@@ -55,6 +55,9 @@
         <div><h3>Always exclude</h3><div class="plist" id="ex-list"></div>
           <form class="padd"><input aria-label="Tag to always exclude" placeholder="tag, e.g. Gore"><button>Add</button></form></div>
         <div><h3>Not interested</h3><div class="plist" id="hidden-list"></div></div>
+        <div><h3>Your VNDB list</h3><div class="plist" id="vlist"></div>
+          <form id="vlist-form" class="padd"><input aria-label="VNDB username" placeholder="VNDB username"><button>Import</button></form>
+          <label class="vlist-hide"><input type="checkbox" id="hide-listed"> Hide titles already on it</label></div>
       </div>
       <p class="pmsg-note">Saved in this browser only.</p>
       <p id="prefs-msg" class="pmsg"></p>
@@ -77,7 +80,7 @@
   </div>
   <p id="status" role="status"></p>
   <main id="grid" tabindex="-1"></main>
-  <div id="more-row"><button id="more" hidden>Load more</button></div>
+  <div id="more-row"><button id="more" hidden>Load more</button> <button id="surprise" hidden title="Open a random title from these results">Surprise me</button></div>
   <div id="toast" role="status"></div>
 </div>
 

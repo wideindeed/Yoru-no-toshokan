@@ -42,6 +42,7 @@ max_retries: 5
 # --- Light novels (AniList GraphQL, no key needed) ---
 anilist_min_interval: 2.1    # seconds between live requests (AniList allows 30-90/min)
 ln_min_tag_rank: 50          # a tag counts only if AniList rates it at least this relevant (0-100)
+log_unmatched: true         # desktop: save words the parser did not understand to data/unmatched.tsv
 
 # --- Optional LLM rewriter (Ollama) ---
 # Rewrites conversational input into keywords for the rule parser; the parser

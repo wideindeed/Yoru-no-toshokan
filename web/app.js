@@ -1,9 +1,9 @@
 // Yoru no Toshokan, browser-only version. The parser runs in Pyodide (web.py);
 // this file talks to VNDB directly and keeps preferences in localStorage.
 const $ = (id) => document.getElementById(id);
-const API = "https://api.vndb.org/kana/vn";
+const API = "https://api.vndb.org/kana/";
 const ANILIST = "https://graphql.anilist.co";
-const DESKTOP_URL = "https://github.com/wideindeed/Yoru-no-toshokan#getting-started";
+const DESKTOP_URL = "https://github.com/wideindeed/Yoru-no-toshokan#run-locally";
 const state = { criteria: [], unmatched: [], notes: [], page: 1, more: false, skip: [], source: "vn" };
 const isLN = () => state.source === "ln";
 const fn = (name) => (isLN() ? "ln_" : "") + name;     // web.py: parse / ln_parse, tags / ln_tags, ...
@@ -65,10 +65,10 @@ const call = async (fn, ...args) => JSON.parse((await py)[fn](...args));
 
 // ---------------------------------------------------------------- VNDB
 const cache = new Map();
-async function vndb(body) {
+async function vndb(body, endpoint = "vn") {
   const key = JSON.stringify(body);
-  if (cache.has(key)) return cache.get(key);
-  const r = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json" }, body: key });
+  if (endpoint === "vn" && cache.has(key)) return cache.get(key);
+  const r = await fetch(API + endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: key });
   if (r.status === 429) throw new Error("VNDB is busy right now (too many requests). Try again in a minute.");
   if (!r.ok) throw new Error(`VNDB API error ${r.status}: ${(await r.text()).slice(0, 200)}`);
   const data = await r.json();
@@ -129,6 +129,10 @@ function renderPrefs() {
     `<span class="chip neg">${esc(t.name)}<button data-id="${esc(t.id)}" aria-label="Stop excluding ${esc(t.name)}">×</button></span>`).join("") || "<em>none</em>";
   $("hidden-list").innerHTML = Object.entries(prefs.hidden).filter(([id]) => id.startsWith(isLN() ? "l" : "v")).map(([id, title]) =>
     `<span class="chip pref"><a href="#${esc(id)}">${esc(title)}</a><button data-unhide="${esc(id)}" aria-label="Show ${esc(title)} again">×</button></span>`).join("") || "<em>none</em>";
+  const l = prefs.vndb_list;
+  $("vlist").innerHTML = l ? `<span class="chip pref">${esc(l.user)}: ${Object.keys(l.items).length} titles<button data-unlist="1" aria-label="Forget this list">×</button></span>`
+                           : `<em>none: import one to mark titles you've read and get a "For you" shelf</em>`;
+  renderShelves();
   if (!$("understood").hidden) renderAlways();
 }
 
@@ -146,10 +150,79 @@ document.querySelector(".padd").addEventListener("submit", async (e) => {
 $("prefs-panel").addEventListener("click", (e) => {
   const b = e.target.closest(".plist button");
   if (!b) return;
-  if (b.dataset.unhide) delete prefs.hidden[b.dataset.unhide];
+  if (b.dataset.unlist) delete prefs.vndb_list;
+  else if (b.dataset.unhide) delete prefs.hidden[b.dataset.unhide];
   else prefs[exKey()] = prefs[exKey()].filter((t) => t.id !== b.dataset.id);
   savePrefs(); renderPrefs();
 });
+
+// your VNDB list: read once from the public API, kept here; marks cards and makes a "For you" shelf
+$("vlist-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const inp = e.target.querySelector("input"), name = inp.value.trim();
+  if (!name) return;
+  $("prefs-msg").textContent = "Reading the list (a few seconds)...";
+  try {
+    const r = await fetch(await call("user_url", name));
+    const who = r.ok ? await call("user_id", JSON.stringify(await r.json())) : null;
+    if (!who) throw new Error(r.ok ? `No VNDB user called "${name}".` : `VNDB API error ${r.status}`);
+    const rows = [];
+    for (let page = 1; page <= 10; page++) {
+      const data = await vndb(await call("ulist_request", who[0], page), "ulist");
+      rows.push(...(data.results || []));
+      if (!data.more) break;
+    }
+    prefs.vndb_list = { user: who[1], ...(await call("read_list", JSON.stringify(rows))) };
+    savePrefs(); renderPrefs(); inp.value = "";
+    $("prefs-msg").textContent = "";
+  } catch (err) {
+    $("prefs-msg").textContent = err.message;
+  }
+});
+$("hide-listed").checked = localStorage.getItem("hideListed") === "1";
+$("hide-listed").addEventListener("change", () => {
+  localStorage.setItem("hideListed", $("hide-listed").checked ? "1" : "0");
+  if (state.criteria.length) search(1);
+});
+function listed(id) { return prefs.vndb_list?.items?.[id]; }
+const hideListed = () => $("hide-listed").checked && searchBy !== "title";
+
+// a title's tags as a search, here or in the other library ("more like this", "same feel")
+async function likeOf(source, id, title, target) {
+  const req = await call("like_request", source, id || "", title || "");
+  let resp = {};
+  if (req.ln) { try { resp = await anilist(req.ln); } catch (e) { if (!/404/.test(e.message)) throw e; } }
+  else resp = await vndb(req.vn);
+  return call("like_criteria", source, JSON.stringify(resp), target);
+}
+async function likeSearch(id) {
+  $("welcome").hidden = true;
+  $("report").innerHTML = "";
+  $("q").value = "";
+  $("mode").value = "all";
+  $("status").textContent = ready ? "Reading its tags..." : "Loading the search engine (the first visit takes a few seconds)...";
+  try {
+    const r = await likeOf(id.startsWith("l") ? "ln" : "vn", id, "", state.source);
+    if (!r.criteria.length) { $("status").textContent = "Not enough tags on that title to compare."; return; }
+    Object.assign(state, { criteria: r.criteria, unmatched: [], skip: [], notes: [] });
+    renderChips();
+    await search(1);
+  } catch (e) {
+    $("status").textContent = "Error: " + e.message;
+  }
+}
+// "something like Ever17": look the title up and search for its tags instead
+async function expandLikes(crits) {
+  const out = [], notes = [];
+  for (const c of crits) {
+    if (c.kind !== "like") { out.push(c); continue; }
+    const r = await likeOf(state.source, "", c.value, state.source);
+    notes.push(r.criteria.length ? `Like ${r.title}: searching for its main tags.` : `No title found for "${c.value}".`);
+    for (const x of r.criteria)
+      if (!out.some((y) => y.kind === x.kind && JSON.stringify(y.value) === JSON.stringify(x.value))) out.push(x);
+  }
+  return [out, notes];
+}
 
 // ---------------------------------------------------------------- search
 async function parseAndSearch(text) {
@@ -158,8 +231,9 @@ async function parseAndSearch(text) {
   $("status").textContent = ready ? "Parsing..." : "Loading the search engine (the first visit takes a few seconds)...";
   try {
     const p = await call(fn("parse"), text);
-    Object.assign(state, { criteria: p.criteria, unmatched: p.unmatched, roles: p.unmatched_role || {},
-                           notes: p.notes, skip: [] });
+    const [criteria, likeNotes] = await expandLikes(p.criteria);
+    Object.assign(state, { criteria, unmatched: p.unmatched, roles: p.unmatched_role || {},
+                           notes: [...likeNotes, ...p.notes], skip: [] });
     $("report").innerHTML = p.report.map((r) =>
       `<tr><td>${esc(r.phrase)}</td><td>${esc(r.method)}</td><td>${r.score.toFixed(0)}</td><td>${esc(r.got.join(", ") || "-")}</td></tr>`).join("");
     renderChips();
@@ -259,15 +333,17 @@ async function search(page) {
     state.more = more;
     if (page === 1) $("grid").innerHTML = "";
     const before = $("grid").children.length;
-    cards.forEach((c) => $("grid").insertAdjacentHTML("beforeend", card(c)));
+    cards.filter((c) => !(hideListed() && listed(c.id) !== undefined))
+      .forEach((c) => $("grid").insertAdjacentHTML("beforeend", card(c)));
     const n = $("grid").children.length;
     const notes = [...state.notes, ...extra,
                    ...(state.criteria.length ? [] : [`No criteria understood; showing top ${SRC[state.source].api} results.`])];
     $("status").textContent = [...notes, n ? `${n} shown${state.more ? ", more available" : ""}` : "Nothing found - try removing a label."].join(" ");
-    if (state.notes.length)       // the only note is the adult one: point to the desktop version
+    if (state.notes.some((t) => t.startsWith("Adult")))   // the adult note: point to the desktop version
       $("status").insertAdjacentHTML("beforeend", ` <a href="${DESKTOP_URL}" target="_blank" rel="noopener">Adult titles: get the free desktop version ↗</a>`);
     if (!n && mode === "all" && state.criteria.length > 1) $("status").insertAdjacentHTML("beforeend", TRY_ANY);
     $("more").hidden = !state.more;
+    $("surprise").hidden = !n;
     if (page > 1) $("grid").children[before]?.querySelector(".info a")?.focus();   // keyboard users carry on from the new cards
   } catch (e) {
     $("status").textContent = "Error: " + e.message;
@@ -284,16 +360,27 @@ function card(c) {
   const meta = [c.year, c.volumes ? `${c.volumes} vol.` : "",
                 c.rating ? `★ ${c.rating.toFixed(ln ? 1 : 2)}` : "unrated", c.votecount ? `${c.votecount} ${ln ? "users" : "votes"}` : ""]
     .filter(Boolean).join(" · ");
-  const hits = ($("mode").value === "any" || c.close) && c.wanted ? ` · ${c.hits}/${c.wanted} tags` : "";
+  const vote = listed(c.id);
+  const mine = vote === undefined ? "" : `<div class="why listed">On your list${vote ? ` · you gave ★${vote / 10}` : ""}</div>`;
   return `<div class="card" data-id="${esc(c.id)}" data-title="${esc(c.title)}">
     <button class="hide-btn" title="Not interested: never show this again" aria-label="Not interested in ${esc(c.title)}">✕</button>
     <a class="cover ${c.blur ? "blur" : ""}" href="#${esc(c.id)}" tabindex="-1" aria-hidden="true">${cover}</a>
     <div class="info">
       <a href="#${esc(c.id)}">${esc(c.title)}</a> <a class="ext" href="${esc(c.url)}" target="_blank" rel="noopener" title="open on ${ln ? "anilist.co" : "vndb.org"}" aria-label="Open on ${ln ? "anilist.co" : "vndb.org"}">↗</a>
-      <div class="meta">${esc(meta + hits)}</div>
+      <div class="meta">${esc(meta)}</div>${why(c)}${mine}
       <div class="tags">${c.tags.map((t) => `<span>${esc(t)}</span>`).join("")}</div>
     </div></div>`;
 }
+
+// which wanted tags a title has: shown when it lacks some (close matches, "any" mode)
+function why(c) {
+  if (!c.wanted || !c.missing?.length) return "";
+  return `<div class="why">${c.hits}/${c.wanted} tags · <span class="miss">missing ${esc(c.missing.join(", "))}</span></div>`;
+}
+$("surprise").addEventListener("click", () => {
+  const links = [...$("grid").querySelectorAll(".info > a:first-child")];
+  if (links.length) location.hash = links[Math.floor(Math.random() * links.length)].hash;
+});
 
 $("grid").addEventListener("click", (e) => {
   const hb = e.target.closest(".hide-btn");
@@ -322,8 +409,12 @@ const SHELVES = {   // [label, sort, criteria]
        ["Coming soon", "soonest", () => [crit("released", [[">", day(0)], ["<=", day(180)]], "Out in the next 6 months")]]],
   ln: [["Trending now", "trending", () => [crit("votecount", 100, "100+ users", ">=")]]],
 };
+function shelves() {
+  return SHELVES[state.source].concat(!isLN() && prefs.vndb_list?.taste?.length
+    ? [["For you", "rating", () => prefs.vndb_list.taste.map((c) => ({ ...c }))]] : []);
+}
 function renderShelves() {
-  $("shelves").innerHTML = SHELVES[state.source].map(([label], i) => `<button type="button" data-i="${i}">${esc(label)}</button>`).join("");
+  $("shelves").innerHTML = shelves().map(([label], i) => `<button type="button" data-i="${i}">${esc(label)}</button>`).join("");
   document.querySelector('#sort option[value="trending"]').hidden = !isLN();
   const s = $("sort").value;
   if ((s === "trending" && !isLN()) || (s === "soonest" && isLN())) $("sort").value = "rating";
@@ -331,7 +422,8 @@ function renderShelves() {
 $("shelves").addEventListener("click", (e) => {
   const b = e.target.closest("button");
   if (!b) return;
-  const [, sort, crits] = SHELVES[state.source][+b.dataset.i];
+  const [label, sort, crits] = shelves()[+b.dataset.i];
+  if (label === "For you") $("hide-listed").checked = true;   // nothing you've already read
   $("q").value = "";
   pushUrl("");
   $("welcome").hidden = true;
@@ -451,6 +543,8 @@ function vnHtml(vn) {
   <main class="vn">
     <div class="vn-side">${cover}
       <a class="vndb-link" href="${esc(vn.url)}" target="_blank" rel="noopener">Open on vndb.org ↗</a>
+      <a class="like-link" href="?like=${esc(vn.id)}">More like this</a>
+      <a class="like-link" href="?like=${esc(vn.id)}&amp;src=ln">Light novels with the same feel</a>
       ${vn.links.map((l) => `<a class="ext-link" href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)} ↗</a>`).join("")}
     </div>
     <div class="vn-main">
@@ -510,6 +604,8 @@ function lnHtml(ln) {
   <main class="vn">
     <div class="vn-side">${cover}
       <a class="vndb-link" href="${esc(ln.url)}" target="_blank" rel="noopener">Open on anilist.co ↗</a>
+      <a class="like-link" href="?like=${esc(ln.id)}&amp;src=ln">More like this</a>
+      <a class="like-link" href="?like=${esc(ln.id)}">Visual novels with the same feel</a>
       ${ln.links.map((l) => `<a class="ext-link" href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)} ↗</a>`).join("")}
     </div>
     <div class="vn-main">
@@ -534,6 +630,17 @@ function lnHtml(ln) {
 
 // blurred images and [spoiler] text: first click reveals (detail view)
 $("vn-body").addEventListener("click", (e) => {
+  const like = e.target.closest(".like-link");
+  if (like) {     // stay on the page: no reload of the search engine
+    e.preventDefault();
+    const u = new URL(like.href);
+    history.pushState(null, "", location.pathname + u.search);
+    applySource(u.searchParams.get("src") || "vn");
+    setBy("describe");
+    showSearch();
+    likeSearch(u.searchParams.get("like"));
+    return;
+  }
   const all = e.target.closest(".all-tags");
   if (all) { all.parentElement.classList.add("open"); all.remove(); return; }
   const b = e.target.closest(".blur:not(.shot), .spoiler:not(.shown)");
@@ -612,8 +719,9 @@ let booted = false;
 const urlQ = new URLSearchParams(location.search).get("q");
 applySource(new URLSearchParams(location.search).get("src") || (location.search ? "vn" : localStorage.getItem("src")) || "vn");
 if (location.hash) route();
-const urlT = new URLSearchParams(location.search).get("title");
-if (urlT) { setBy("title"); $("q").value = urlT; titleSearch(urlT); }
+const urlT = new URLSearchParams(location.search).get("title"), urlL = new URLSearchParams(location.search).get("like");
+if (urlL && /^[vl]\d{1,9}$/.test(urlL)) likeSearch(urlL);
+else if (urlT) { setBy("title"); $("q").value = urlT; titleSearch(urlT); }
 else if (urlQ) { $("q").value = urlQ; parseAndSearch(urlQ); }
 booted = true;
 py.catch((e) => { $("status").textContent = "Could not start the search engine: " + e.message; });

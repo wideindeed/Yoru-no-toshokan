@@ -6,12 +6,13 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 import details
+import like
 from prefs import Prefs
 import query_builder as qb
 from parsing.model import Criterion, ParseResult
 from parsing.parser import QueryParser
 from settings import load_config
-from vndb.client import VNDBClient
+from vndb.client import VNDBClient, VNDBError
 from vndb.tags import load_tag_index
 
 SOURCES = ("vn", "ln")
@@ -147,6 +148,65 @@ class Finder:
         if not criteria:
             notes.append("No criteria understood; showing top AniList light novels.")
         return SearchResult(cards, more, q, page, sort, mode, notes)
+
+    # ------------------------------------------------------- like this one
+    def _lookup(self, source: str, item_id: str | None = None, search: str | None = None):
+        """(id, title, tags) of one title by id or best title match, or None."""
+        if source == "ln":
+            try:
+                return like.from_ln(self.ln.client.gql(like.ln_request(item_id, search)).get("Media"))
+            except VNDBError as e:
+                if "404" in str(e):   # AniList's answer for "no such title"
+                    return None
+                raise
+        body = like.vn_request(item_id, search)
+        rows = self.client.query("vn", filters=body["filters"], fields=body["fields"],
+                                 sort=body.get("sort"), results=body["results"]).get("results") or []
+        return like.from_vn(like.best_vn(rows))
+
+    def like(self, item_id: str, target: str = "vn") -> list[Criterion]:
+        """Criteria for "more like this" (target = same library) or "same feel" in the other one."""
+        source = "ln" if item_id.startswith("l") else "vn"
+        found = self._lookup(source, item_id=item_id)
+        t = self.side(target)
+        return like.like_criteria(found, source, self.side(source).index, target, (t.index, t.parser.matcher))
+
+    def expand_likes(self, crits: list[Criterion], source: str = "vn") -> tuple[list[Criterion], list[str]]:
+        """Swap each "like <title>" for that title's tags (looked up in this library)."""
+        out, notes = [], []
+        for c in crits:
+            if c.kind != "like":
+                out.append(c)
+                continue
+            found = self._lookup(source, search=c.value)
+            new = like.like_criteria(found, source, self.side(source).index, source)
+            if new:
+                notes.append(f"Like {found[1]}: searching for its main tags.")
+                out += [x for x in new if all(x.key() != y.key() for y in out)]
+            else:
+                notes.append(f"No title found for \"{c.value}\".")
+        return out, notes
+
+    def import_list(self, username: str) -> dict:
+        """Read a VNDB user's public list into prefs (titles seen + a taste profile)."""
+        try:
+            r = self.client.session.get(like.user_url(self.client.base, username), timeout=self.client.timeout)
+            r.raise_for_status()
+        except Exception as e:
+            raise VNDBError(f"user lookup failed: {e}") from None
+        who = like.user_id(r.json(), username)
+        if who is None:
+            raise ValueError(f"no VNDB user called {username!r}")
+        rows = []
+        for page in range(1, like.LIST_PAGES + 1):
+            body = like.ulist_request(who[0], page)
+            data = self.client.post("ulist", body, use_cache=False)
+            rows += data.get("results") or []
+            if not data.get("more"):
+                break
+        out = {"user": who[1], **like.read_list(rows, self.index)}
+        self.prefs.set_list(out)
+        return out
 
     # -------------------------------------------------------------- details
     def details(self, vid: str, mature: bool = False) -> dict | None:

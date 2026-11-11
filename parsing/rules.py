@@ -245,6 +245,12 @@ _LANG_RE = _wb(
     + "|".join(re.escape(k) for k in sorted(LANGUAGES, key=len, reverse=True))
     + r")(?:\s+(?:translation|translated|tl|language|version|patch|release|text))?"
 )
+_LANG_ALT = "|".join(re.escape(k) for k in sorted(LANGUAGES, key=len, reverse=True))
+_TL_WHO = r"(official(?:ly)?|licen[cs]ed|fan[\s-]?made|fan|unofficial)"
+_TL_NOUN = r"(?:translations?|translated|tls?|locali[sz]ations?|locali[sz]ed|patch(?:es|ed)?)"
+_TL_RE = _wb(_TL_WHO + r"\s+(?:(" + _LANG_ALT + r")\s+)?" + _TL_NOUN
+             + r"(?:\s+(?:in|to|into)\s+(" + _LANG_ALT + r"))?"
+             r"|" + _TL_WHO + r"\s+(" + _LANG_ALT + r")(?:\s+(?:releases?|versions?))?")
 _PLATFORM_RES = [(_wb(r"(?:on\s+|for\s+)?(?:" + p + r")(?:\s+(?:version|port|release))?"), codes, label)
                  for p, codes, label in PLATFORMS]
 _ENGINE_RES = [(_wb(r"(?:made\s+(?:in|with|using)\s+|built\s+(?:in|with)\s+)?(?:"
@@ -342,6 +348,17 @@ def extract(phrase: str, cfg: dict, exclude: bool = False, person: bool = False)
     m = _POPULAR_RE.search(text)
     if m:
         add("votecount", int(cfg["popular_min_votes"]), f"Votes ≥ {cfg['popular_min_votes']}", op=">=")
+        text = cut(m)
+
+    # translations: "official english translation", "fan tl", "officially translated into french"
+    m = _TL_RE.search(text)
+    if m:
+        who = (m.group(1) or m.group(4)).lower()
+        lang = m.group(2) or m.group(3) or m.group(5)
+        code = LANGUAGES[lang.lower()] if lang else "en"
+        name = LANG_LABELS.get(code, lang.title() if lang else "English")
+        official = not who.startswith(("fan", "unofficial"))
+        add("tl", [code, official], f"Official {name} translation" if official else f"Fan translation ({name})")
         text = cut(m)
 
     # languages (may appear several times: "english or japanese")

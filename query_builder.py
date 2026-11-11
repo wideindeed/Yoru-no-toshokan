@@ -57,6 +57,14 @@ def criterion_filter(c: Criterion, cfg: dict):
         if ex:   # NOT (a AND b) = (NOT a) OR (NOT b)
             return _or([["released", _INVERT[op], d] for op, d in c.value])
         return _and([["released", op, d] for op, d in c.value])
+    if c.kind == "tl":      # a release in that language, by the publisher (official) or not (fan)
+        code, official = c.value
+        rel = ["and", ["lang", "=", code], ["official", "=" if official else "!=", 1]]
+        return ["release", "!=" if ex else "=", rel]
+    if c.kind == "id":
+        return ["id", "!=" if ex else "=", c.value]
+    if c.kind == "like":    # expanded into tags before searching; never a filter itself
+        return None
     if c.kind == "title":   # VNDB's own title search (titles, aliases, release titles)
         return ["search", "=", str(c.value)[:200]]   # never an exclusion
     if c.kind in ("length", "rating", "votecount"):
@@ -131,8 +139,8 @@ def close_note(n_all: int) -> str:
             "closest matches follow, marked with how many they have.")
 
 
-def wanted_tag_groups(crits: list[Criterion]) -> list[tuple[set[str], list[str]]]:
-    """Each positive tag criterion as (acceptable ids, lowercase names) for re-ranking.
+def wanted_tag_groups(crits: list[Criterion]) -> list[tuple[set[str], list[str], str]]:
+    """Each positive tag criterion as (acceptable ids, lowercase names, label) for re-ranking.
     Names let child tags count too: VNDB's tag filter matches "Vampire Heroine"
     for "Vampire", but the VN only lists the child's id."""
     out = []
@@ -141,12 +149,12 @@ def wanted_tag_groups(crits: list[Criterion]) -> list[tuple[set[str], list[str]]
             continue
         ids = {c.value} if c.kind == "tag" else set(c.value)
         names = [n.strip().lower() for n in c.label.split(" / ")] if c.kind == "tag" or "/" in c.label else []
-        out.append((ids, names))
+        out.append((ids, names, c.label))
     return out
 
 
 def _hit(group, vn_tags: list[dict]) -> bool:
-    ids, names = group
+    ids, names = group[0], group[1]
     return any(t["id"] in ids or any(n and n in (t.get("name") or "").lower() for n in names)
                for t in vn_tags)
 
@@ -170,6 +178,11 @@ def to_card(vn: dict, cfg: dict, groups: list[set[str]] = (), show_explicit: boo
         "cover": img.get("thumbnail") or img.get("url"),
         "cover_full": img.get("url"),
         "blur": bool(img) and not show_explicit and (sexual >= cfg["blur_sexual_level"] or violence >= cfg["blur_violence_level"]),
-        "hits": sum(1 for g in groups if _hit(g, vn.get("tags") or [])),
-        "wanted": len(groups),
+        **hit_summary(groups, vn.get("tags") or []),
     }
+
+
+def hit_summary(groups, item_tags: list[dict]) -> dict:
+    """How many wanted tags a title has, and which ones it lacks (shown on the card)."""
+    missing = [g[2] for g in groups if not _hit(g, item_tags)]
+    return {"hits": len(groups) - len(missing), "wanted": len(groups), "missing": missing}

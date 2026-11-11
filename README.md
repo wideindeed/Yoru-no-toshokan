@@ -13,7 +13,9 @@ Search visual novels ([VNDB](https://vndb.org)) and light novels ([AniList](http
 ## Features
 
 - Plain-sentence search: tags, nicknames, language, engine, platform, length, year, rating, and exclusions ("no horror")
-- Every parsed term is shown as a removable label; anything not understood is flagged
+- "Something like Ever17", "official English translation", and "more like this" on any title, including across visual novels and light novels
+- Every parsed term is shown as a removable label; anything not understood is flagged, and results show which tags they're missing
+- Import your VNDB list to mark what you've read and get a "For you" shelf
 - Detail pages with tags, staff, screenshots and related titles
 - Browse shelves, tag browser, title search, and shareable URLs
 - Per-mode tag blocklist and hidden titles

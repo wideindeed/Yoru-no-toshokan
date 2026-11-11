@@ -2,12 +2,14 @@
 from __future__ import annotations
 
 import re
+import time
 
 from flask import Flask, abort, jsonify, render_template, request
 
 from finder import SOURCES, Finder
 from parsing.model import Criterion
 from parsing.tag_browser import TagBrowser
+from settings import DATA_DIR
 from vndb.client import VNDBError
 
 app = Flask(__name__)
@@ -37,19 +39,44 @@ def index():
 @app.post("/api/parse")
 def api_parse():
     body = request.get_json(force=True)
+    f, source = get_finder(), source_of(body)
     try:
-        res, rewritten, note = get_finder().interpret(body.get("text", ""), use_llm=bool(body.get("use_llm")),
-                                                      source=source_of(body))
+        res, rewritten, note = f.interpret(body.get("text", ""), use_llm=bool(body.get("use_llm")), source=source)
+        crits, like_notes = f.expand_likes(res.criteria, source)
     except VNDBError as e:   # first LN use downloads the AniList tag list
-        return jsonify({"error": f"{API_NAME[source_of(body)]} API error: {e}"}), 502
+        return jsonify({"error": f"{API_NAME[source]} API error: {e}"}), 502
+    log_unmatched(f.cfg, source, body.get("text", ""), res.unmatched)
     return jsonify({
-        "criteria": [c.to_dict() for c in res.criteria],
+        "criteria": [c.to_dict() for c in crits],
+        "like_notes": like_notes,
         "unmatched": res.unmatched, "unmatched_role": res.unmatched_role,
         "rewritten": rewritten,
         "note": note,
         "report": [{"phrase": r.phrase, "method": r.method, "score": r.score,
                     "got": [c.display for c in r.criteria]} for r in res.report],
     })
+
+
+def log_unmatched(cfg: dict, source: str, text: str, words: list[str]) -> None:
+    """Words the parser did not understand, one line each, to show what synonyms.yaml is missing."""
+    if not words or not cfg.get("log_unmatched", True):
+        return
+    with open(DATA_DIR / "unmatched.tsv", "a", encoding="utf-8") as fh:
+        for w in words:
+            fh.write("\t".join([time.strftime("%Y-%m-%d"), source, w, " ".join(text.split())[:300]]) + "\n")
+
+
+@app.get("/api/like")
+def api_like():
+    """?id=v17|l123&target=vn|ln: criteria for titles like this one, in either library."""
+    item, target = request.args.get("id", ""), source_of()
+    if not re.fullmatch(r"[vl]\d{1,9}", item):
+        return jsonify({"error": "bad id"}), 400
+    try:
+        crits = get_finder().like(item, target)
+    except VNDBError as e:
+        return jsonify({"error": f"{API_NAME[target]} API error: {e}"}), 502
+    return jsonify({"criteria": [c.to_dict() for c in crits]})
 
 
 @app.post("/api/search")
@@ -86,7 +113,7 @@ def api_prefs():
 
 @app.post("/api/prefs")
 def api_prefs_change():
-    """{action: exclude|unexclude|hide|unhide, layer, name|id, title, source}"""
+    """{action: exclude|unexclude|hide|unhide|list|unlist, layer, name|id, title, source, user}"""
     f, body = get_finder(), request.get_json(force=True)
     act, layer, source = body.get("action"), body.get("layer", "normal"), source_of(body)
     if act == "exclude":
@@ -101,6 +128,13 @@ def api_prefs_change():
         f.prefs.hide(body["id"], body.get("title", ""))
     elif act == "unhide":
         f.prefs.unhide(body.get("id"))
+    elif act == "list":
+        try:
+            f.import_list(str(body.get("user", "")))
+        except (ValueError, VNDBError) as e:
+            return jsonify({"error": str(e)}), 400
+    elif act == "unlist":
+        f.prefs.set_list(None)
     else:
         return jsonify({"error": "bad action"}), 400
     return jsonify(f.prefs.to_dict())

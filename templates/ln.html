@@ -23,6 +23,8 @@
       <div class="cover big"><div class="placeholder">no cover</div></div>
     {% endif %}
     <a class="vndb-link" href="{{ ln.url }}" target="_blank" rel="noopener">Open on anilist.co ↗</a>
+    <a class="like-link" href="/?like={{ ln.id }}&amp;src=ln">More like this</a>
+    <a class="like-link" href="/?like={{ ln.id }}&amp;src=vn">Visual novels with the same feel</a>
     {% for l in ln.links %}<a class="ext-link" href="{{ l.url }}" target="_blank" rel="noopener">{{ l.label }} ↗</a>{% endfor %}
   </div>
 

@@ -19,7 +19,7 @@ import re
 
 from parsing import rules
 from parsing.matcher import GENDER_WORDS, ROLE_OF, ROLE_SUFFIXES, SYNONYMS_PATH, Match, Synonyms, TagMatcher
-from parsing.model import ParseResult, PhraseReport
+from parsing.model import Criterion, ParseResult, PhraseReport
 from settings import load_config
 from vndb.tags import TagIndex
 
@@ -32,6 +32,13 @@ ROLE_WORDS = GENDER_WORDS | {w for s in ROLE_SUFFIXES for w in s.split()} | {
 _ROLE_IS_RE = re.compile(r"\b(?:protagonist|protag|mc|main character)\s+(?:is|being|as)\s+an?\s+(?:\w+\s+)?"
                          r"(?:girl|guy|boy|woman|man)\b|\b(?:girl|guy|boy|woman|man)\s+(?:protagonist|protag|mc)\b")
 _SENTENCE_RE = re.compile(r"[.!?]\s|[.!?]$|[;\n]")
+#  "something like Ever17", "similar to Spice and Wolf": the title runs to the end of
+#  its clause (a comma, "but", "with", "and no ..."), so titles with "and" survive.
+_LIKE_RE = re.compile(
+    r"(?:(?<![\w'])(?:something|anything|games?|vns?|visual\s+novels?|novels?|ones?|stuff|titles?|books?)"
+    r"\s+(?:just\s+|kind\s+of\s+|a\s+bit\s+)?like|similar\s+to|in\s+the\s+(?:vein|style|spirit)\s+of"
+    r"|reminds?\s+me\s+of|^\s*like)\s+(?P<t>.+?)"
+    r"(?=\s*(?:[,.!?]|;\s|$|\s+(?:but|with|without|and\s+(?:no|not|with|without|also|in|on))\b))", re.I)
 
 
 class QueryParser:
@@ -47,6 +54,7 @@ class QueryParser:
 
     def parse(self, text: str) -> ParseResult:
         res = ParseResult(text)
+        text = self._likes(text, res)
         for sentence in _SENTENCE_RE.split(text):
             role = None                 # who this sentence describes, if anyone
             for phrase in rules.split_phrases(sentence):
@@ -54,12 +62,26 @@ class QueryParser:
                 self._parse_phrase(phrase, res, role)
         return res
 
+    def _likes(self, text: str, res: ParseResult) -> str:
+        """Pull out "like <title>" clauses; the caller looks the title up and swaps in its tags.
+        "something like vampires" names a tag, not a title, so it is left to the tag matcher."""
+        def one(m: re.Match) -> str:
+            title = m["t"].strip(" '\"")
+            if not title or self.matcher.lookup_exact(title) or rules.is_empty_leftover(title):
+                return m[0]
+            c = Criterion("like", title, f"Like: {title}", phrase=m[0].strip(), method="like")
+            if res.add(c):
+                res.report.append(PhraseReport(c.phrase, [c], "like", 100.0))
+            return ", "
+        return _LIKE_RE.sub(one, text)
+
     def _role_in(self, phrase: str) -> str | None:
         """The last person a clause names: "a girl" -> heroine, "the MC" -> protagonist."""
         if not self.matcher.roles:
             return None                 # AniList has no per-role trait tags
         # "the protagonist is a girl", "girl protagonist": the girl IS the protagonist
         low = _ROLE_IS_RE.sub("protagonist", phrase.lower())
+        low = re.sub(r"\bmultiple (?:protagonists|heroines|heroes)\b", "", low)   # a story structure, not a person
         hits = [(m.start(), ROLE_OF[m.group()]) for m in re.finditer(r"[a-z]+", low) if m.group() in ROLE_OF]
         hits += [(m.start(), "protagonist") for m in re.finditer(r"main characters?|lead character", low)]
         return max(hits)[1] if hits else None

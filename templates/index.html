@@ -55,6 +55,9 @@
       <div><h3>Always exclude · Mature on</h3><div class="plist" id="ex-mature"></div>
         <form class="padd" data-layer="mature"><input aria-label="Tag to always exclude, Mature on" placeholder="tag, e.g. Rape"><button>Add</button></form></div>
       <div><h3>Not interested</h3><div class="plist" id="hidden-list"></div></div>
+      <div><h3>Your VNDB list</h3><div class="plist" id="vlist"></div>
+        <form id="vlist-form" class="padd"><input aria-label="VNDB username" placeholder="VNDB username"><button>Import</button></form>
+        <label class="vlist-hide"><input type="checkbox" id="hide-listed"> Hide titles already on it</label></div>
     </div>
     <p id="prefs-msg" class="pmsg"></p>
   </details>
@@ -80,7 +83,7 @@
 </div>
 <p id="status" role="status"></p>
 <main id="grid" tabindex="-1"></main>
-<div id="more-row"><button id="more" hidden>Load more</button></div>
+<div id="more-row"><button id="more" hidden>Load more</button> <button id="surprise" hidden title="Open a random title from these results">Surprise me</button></div>
 <div id="toast" role="status"></div>
 
 <script src="{{ url_for('static', filename='tagbrowser.js') }}"></script>

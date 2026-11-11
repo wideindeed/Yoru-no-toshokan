@@ -144,15 +144,35 @@ phrases:
   detectives:               { tag: "Detective Work", ln: "Detective" }
   superpowers:              { tag: "Superpowers", ln: "Super Power" }
   super powers:             { tag: "Superpowers", ln: "Super Power" }
+  dark past:                { tag: "Psychological Trauma", ln: "Tragedy" }   # someone's past, not the tone
+  traumatic past:           { tag: "Psychological Trauma", ln: "Tragedy" }
+  school life:              { tag: "School", ln: "School" }
+  big city:                 { tag: "Metropolitan Area", ln: "Urban" }
+  the city:                 { tag: "Metropolitan Area", ln: "Urban" }
+  urban:                    { tag: "Metropolitan Area", ln: "Urban" }
+  metropolis:               { tag: "Metropolitan Area", ln: "Urban" }
+  rural:                    { tag: "Countryside", ln: "Rural" }
+  japan:                    { tag: "Modern Day Japan" }
+  modern japan:             { tag: "Modern Day Japan" }
+  historical:               { tag: "Past Earth", ln: "Historical" }
+  historical setting:       { tag: "Past Earth", ln: "Historical" }
+  period piece:             { tag: "Past Earth", ln: "Historical" }
+  dating sim:               { tag: "Dating Simulation" }
+  dating sims:              { tag: "Dating Simulation" }
+  dating sim element:       { tag: "Dating Simulation" }
+  villainess:               { tag: "Villainous Heroine", ln: "Villainess" }
+  villainess protagonist:   { tag: ["Female Protagonist", "Villainous Protagonist"], ln: "Villainess" }
+  villain protagonist:      { tag: "Villainous Protagonist" }
+  evil protagonist:         { tag: "Villainous Protagonist" }
+  harem:                    { tag: "Harem Ending", ln: "Female Harem" }   # VNDB has no plain harem tag
+  harem route:              { tag: "Harem Ending" }
   supernatural battles:     { tag: ["Superpowers", "Fighting Protagonist"], ln: { tag: ["Super Power", "Action"] } }
 
   # --- light novels only (AniList names) ------------------------------
-  harem:                    { ln: "Female Harem" }
   harem romance:            { ln: { tag: ["Female Harem", "Romance"] } }
   reverse harem:            { ln: "Male Harem" }
   otome isekai:             { ln: { tag: ["Isekai", "Female Protagonist"] } }
   akuyaku reijou:           { ln: "Villainess" }
-  villainess:               { ln: "Villainess" }
   reincarnated:             { ln: "Reincarnation" }
   reincarnated in another world: { ln: { tag: ["Isekai", "Reincarnation"] } }
   transported to another world:  { ln: "Isekai" }
@@ -165,6 +185,8 @@ phrases:
   romantic comedy:          { ln: { tag: ["Romance", "Comedy"] } }
   slow life:                { ln: "Iyashikei" }
   healing:                  { ln: "Iyashikei" }
+  cute girls doing cute things: { ln: "Cute Girls Doing Cute Things" }
+  cgdct:                    { ln: "Cute Girls Doing Cute Things" }
   cultivation novel:        { ln: "Cultivation" }
   game world:               { ln: "Virtual World" }
   vrmmo:                    { ln: "Virtual World" }
@@ -233,6 +255,9 @@ content_levels:
 # Same targets as `phrases`. Use single quotes so backslashes survive.
 # ---------------------------------------------------------------------
 patterns:
+  - pattern: '(?:historical|feudal|old|ancient)\s+(?:setting\s+)?(?:in\s+)?japan|japanese\s+history'
+    tag: "Past Japan"
+    ln: "Historical"
   - pattern: '(?:los(?:e|es|t|ing)|forg[eo]t(?:s|ten)?)\s+(?:(?:his|her|their|my|your|all|of)\s+)*memor(?:y|ies)'
     tag: "Amnesia"
   - pattern: '(?:main\s+character|protagonist|protag|main\s+lead|lead|mc|hero)(?:\s+(?:is|being|should\s+be|must\s+be|would\s+be|has\s+to\s+be))?(?:\s+an?)?\s+(?:girl|woman|female|lady|gal)'

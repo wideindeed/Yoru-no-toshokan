@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 
 import details
+import like
 import query_builder as qb
 from parsing.model import Criterion
 from parsing.parser import QueryParser
@@ -210,3 +211,44 @@ def ln_resolve(name: str) -> str:
 
 def ln_tags(q: str) -> str:
     return json.dumps(_ln_side()["browser"].search(q, include_ero=False))
+
+
+# ------------------------------------------------------------------ more like this / your VNDB list
+def _like_side(source: str):
+    return (_ln_side()["index"], _ln_side()["parser"].matcher) if source == "ln" else (index, parser.matcher)
+
+
+def like_request(source: str, item_id: str, search: str) -> str:
+    """The request that fetches one title's tags, by id or by name.
+    -> {"vn": /kana/vn body} or {"ln": GraphQL text}"""
+    if source == "ln":
+        return json.dumps({"ln": like.ln_request(item_id or None, search or None)})
+    return json.dumps({"vn": like.vn_request(item_id or None, search or None)})
+
+
+def like_criteria(source: str, response_json: str, target: str) -> str:
+    """The response to like_request -> {"criteria": [...], "title": str|None} for the target library."""
+    r = json.loads(response_json) or {}
+    found = (like.from_ln(r.get("Media")) if source == "ln"
+             else like.from_vn(like.best_vn(r.get("results") or [])))
+    if found and source == "ln" and (r.get("Media") or {}).get("isAdult"):
+        found = None                       # all ages: no starting from an adult title
+    crits = like.like_criteria(found, source, _like_side(source)[0], target, _like_side(target))
+    return json.dumps({"criteria": [c.to_dict() for c in crits], "title": found[1] if found else None})
+
+
+def user_url(name: str) -> str:
+    return json.dumps(like.user_url(cfg["api_url"], name))
+
+
+def user_id(response_json: str) -> str:
+    who = like.user_id(json.loads(response_json), "")
+    return json.dumps(list(who) if who else None)
+
+
+def ulist_request(uid: str, page: int) -> str:
+    return json.dumps(like.ulist_request(uid, int(page)))
+
+
+def read_list(rows_json: str) -> str:
+    return json.dumps(like.read_list(json.loads(rows_json), index))

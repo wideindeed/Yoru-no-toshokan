@@ -69,4 +69,4 @@ def test_prefs_roundtrip(tmp_path):
     q = Prefs(tmp_path / "p.json")
     assert q.exclude["normal"] == [{"id": "g542", "name": "Otome Game"}] and q.hidden == {"v1": "X"}
     q.remove_exclude("normal", "g542"); q.unhide("v1")
-    assert Prefs(tmp_path / "p.json").to_dict() == {"exclude": {l: [] for l in ("normal", "mature", "ln_normal", "ln_mature")}, "hidden": []}
+    assert Prefs(tmp_path / "p.json").to_dict() == {"exclude": {l: [] for l in ("normal", "mature", "ln_normal", "ln_mature")}, "hidden": [], "vndb_list": None}
