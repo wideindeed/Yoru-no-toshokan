@@ -16,7 +16,7 @@ def test_filter_snapshot():
         Criterion("released", [[">=", "2016-01-01"]], "Released 2016 or later"),
         Criterion("length", 3, "Length: Medium or shorter", op="<="),
     ]
-    assert qb.build_filters(crits, CFG) == [
+    assert [f for f in qb.build_filters(crits, CFG) if f not in qb.BLOCK_FILTERS] == [
         "and",
         ["tag", "=", ["g2", 0, 1.2]],
         ["or", ["tag", "=", ["g1274", 0, 1.2]], ["tag", "=", ["g236", 0, 1.2]]],
@@ -47,9 +47,18 @@ def test_mature_filter():
     crits = [Criterion("tag", "g2", "Fantasy")]
     assert qb.build_filters(crits, CFG, mature=False)[-1] == ["tag", "!=", ["g23", 2, 0.0]]
     assert qb.build_filters(crits, CFG, mature=True)[-1][:2] == ["tag", "="]
+    assert qb.build_filters(crits, CFG, mature="all")[-1] == qb.BLOCK_FILTERS[-1]   # Everything: no content filter
     # a content level written in the query wins over the toggle
     own = crits + [Criterion("tag_any", ["g23", "g5"], "Content: explicit")]
     assert qb.mature_filter(False, CFG) not in qb.build_filters(own, CFG, mature=False)
+
+
+def test_blocked_tags_always_excluded():
+    import details
+    for mature in (None, False, True):
+        f = qb.build_filters([Criterion("tag", "g156", "Lolicon")], CFG, mature=mature)
+        assert all(b in f for b in qb.BLOCK_FILTERS) and ["tag", "=", ["g156", 0, 1.2]] in f   # contradiction: nothing
+    assert details.blocked({"tags": [{"id": "g2023"}]}) and not details.blocked({"tags": [{"id": "g2"}]})
 
 
 def test_description_markup_is_safe():

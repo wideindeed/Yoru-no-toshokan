@@ -86,7 +86,7 @@ class Finder:
 
     # --------------------------------------------------------------- search
     def search(self, criteria: list[Criterion], sort: str | None = None, mode: str = "all",
-               page: int = 1, mature: bool = False, results: int | None = None,
+               page: int = 1, mature: bool | str = False, results: int | None = None,
                skip_excludes=(), use_prefs: bool = True, source: str = "vn") -> SearchResult:
         """skip_excludes: always-excluded tag ids dropped for this search only."""
         from anilist import query as aq
@@ -212,7 +212,7 @@ class Finder:
         """One VN for the detail page (one cached API call)."""
         data = self.client.query("vn", filters=["id", "=", vid], fields=details.DETAIL_FIELDS, results=1)
         rows = data.get("results") or []
-        return details.shape(rows[0], self.cfg, mature) if rows else None
+        return details.shape(rows[0], self.cfg, mature) if rows and not details.blocked(rows[0]) else None
 
     def ln_details(self, lid: str, mature: bool = False) -> dict | None:
         """One light novel for the detail page (one cached AniList call)."""

@@ -6,6 +6,7 @@ import re
 
 from parsing.rules import LENGTH_LABELS
 from vndb.labels import LANGUAGE_LABELS, PLATFORM_LABELS, STAFF_ROLE_LABELS
+from vndb.tags import BLOCKED_TAGS
 
 DETAIL_FIELDS = ", ".join([
     "id", "title", "alttitle", "aliases", "released", "rating", "votecount", "length",
@@ -61,6 +62,11 @@ def bbcode(text: str | None) -> str:
 
 
 # ------------------------------------------------------------ page shaping
+def blocked(vn: dict) -> bool:
+    """A title tagged with sexual content involving minors (vndb.tags.BLOCKED_TAGS): never shown."""
+    return any(t.get("id") in BLOCKED_TAGS for t in vn.get("tags") or [])
+
+
 def _blur(img: dict | None, cfg: dict, mature: bool) -> bool:
     if not img or mature:
         return False

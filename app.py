@@ -89,7 +89,7 @@ def api_search():
         return jsonify({"error": f"bad criteria: {e}"}), 400
     try:
         out = get_finder().search(crits, sort=body.get("sort"), mode=body.get("mode", "all"),
-                                  page=int(body.get("page", 1)), mature=bool(body.get("mature")),
+                                  page=int(body.get("page", 1)), mature="all" if body.get("mature") == "all" else bool(body.get("mature")),
                                   skip_excludes=set(body.get("skip_excludes") or []), source=source)
     except VNDBError as e:
         return jsonify({"error": f"{API_NAME[source]} API error: {e}"}), 502

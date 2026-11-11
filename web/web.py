@@ -51,6 +51,7 @@ def parse(text: str) -> str:
         "criteria": [c.to_dict() for c in keep],
         "unmatched": res.unmatched, "unmatched_role": res.unmatched_role,
         "notes": [ADULT_NOTE] if len(keep) < len(res.criteria) else [],
+        "adult": [c.to_dict() for c in res.criteria if _adult(c)],   # only for the VNDB link
         "report": [{"phrase": r.phrase, "method": r.method, "score": r.score,
                     "got": [c.display for c in r.criteria]} for r in res.report],
     })
@@ -94,13 +95,23 @@ def _body(crits, sort, mode, page, hidden) -> dict:
             "reverse": reverse, "results": int(cfg["results_per_page"]), "page": int(page)}
 
 
+def vndb_filters(criteria_json: str, adult_json: str, mode: str) -> str:
+    """Filters for an "Open on VNDB" link: the whole search, adult parts included, since
+    VNDB shows its own catalog under its own settings. Blocked tags stay excluded."""
+    crits = [Criterion.from_dict(d) for d in json.loads(criteria_json) + json.loads(adult_json)]
+    return json.dumps(qb.build_filters([c for c in crits if not c.soft], cfg, mode=mode))
+
+
 def cards(results_json: str, criteria_json: str, mode: str) -> str:
     groups = qb.wanted_tag_groups(_crits(criteria_json))
     return json.dumps(qb.order([qb.to_card(v, cfg, groups, False) for v in json.loads(results_json)], mode))
 
 
 def detail(vn_json: str) -> str:
-    d = details.shape(json.loads(vn_json), cfg, mature=False)
+    vn = json.loads(vn_json)
+    if details.blocked(vn):
+        return "null"
+    d = details.shape(vn, cfg, mature=False)
     d["description"] = d["description"].replace('href="/vn/', 'href="#')   # in-page links
     return json.dumps(d)
 
@@ -154,6 +165,7 @@ def ln_parse(text: str) -> str:
         "criteria": [c.to_dict() for c in keep],
         "unmatched": res.unmatched, "unmatched_role": res.unmatched_role,
         "notes": [ADULT_NOTE] if len(keep) < len(res.criteria) else [],
+        "adult": [c.to_dict() for c in res.criteria if _adult(c)],   # only for the VNDB link
         "report": [{"phrase": r.phrase, "method": r.method, "score": r.score,
                     "got": [c.display for c in r.criteria]} for r in res.report],
     })

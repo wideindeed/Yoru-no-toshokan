@@ -37,7 +37,7 @@ python -m venv .venv
 
 Open <http://127.0.0.1:5050>. The first start downloads VNDB's tag list (about a minute).
 
-The desktop version has a **Mature** switch: off hides all sexual content, on shows only it.
+The desktop version has a **Content** setting: *All ages* hides sexual content, *Adult only* shows only it, *Everything* shows both (adult settings are unblurred).
 
 ## Configuration
 

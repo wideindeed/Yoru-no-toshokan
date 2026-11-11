@@ -5,7 +5,8 @@ let prefs = { exclude: { normal: [], mature: [], ln_normal: [], ln_mature: [] },
 let searchBy = "describe";
 const isLN = () => state.source === "ln";
 const layerOf = (l) => (isLN() ? "ln_" : "") + l;              // prefs layers: normal, mature, ln_normal, ln_mature
-const layer = () => layerOf($("mature").checked ? "mature" : "normal");
+const matureOn = () => $("mature").value !== "0";               // Adult only or Everything
+const layer = () => layerOf(matureOn() ? "mature" : "normal");
 
 // ---------------------------------------------------------------- source: VN or light novel
 const SRC = {
@@ -174,11 +175,11 @@ $("chips").addEventListener("click", (e) => {
 let lookingUp = null;           // an unmatched phrase being looked up; replaced by the tag picked
 const tags = mountTagBrowser($("tag-browser"), {
   async search(q) {
-    const r = await fetch(`/api/tags?q=${encodeURIComponent(q)}&source=${state.source}${$("mature").checked ? "&mature=1" : ""}`);
+    const r = await fetch(`/api/tags?q=${encodeURIComponent(q)}&source=${state.source}${matureOn() ? "&mature=1" : ""}`);
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     return r.json();
   },
-  related: (q) => relatedTags(q, { base: "/static/vectors/", src: state.source, ero: $("mature").checked,
+  related: (q) => relatedTags(q, { base: "/static/vectors/", src: state.source, ero: matureOn(),
                                    role: state.roles?.[q] }),
   onPick(t, exclude) {
     const w = $("welcome"); if (w) w.hidden = true;
@@ -197,7 +198,7 @@ async function search(page) {
   try {
     const r = await post("/api/search", {
       criteria: state.criteria, page, sort: $("sort").value, mode: $("mode").value,
-      mature: $("mature").checked, skip_excludes: state.skip, source: state.source,
+      mature: $("mature").value === "all" ? "all" : matureOn(), skip_excludes: state.skip, source: state.source,
     });
     state.page = r.page;
     state.more = r.more;
@@ -221,7 +222,7 @@ async function search(page) {
 function card(c) {
   const blur = c.blur;
   const ln = c.id.startsWith("l");
-  const href = `/${ln ? "ln" : "vn"}/${c.id}${$("mature").checked ? "?mature=1" : ""}`;
+  const href = `/${ln ? "ln" : "vn"}/${c.id}${matureOn() ? "?mature=1" : ""}`;
   const cover = c.cover
     ? `<img src="${esc(c.cover)}" alt="" loading="lazy" referrerpolicy="no-referrer">`
     : `<div class="placeholder">no cover</div>`;
@@ -357,8 +358,8 @@ $("rewritten").addEventListener("keydown", (e) => {
 $("more").addEventListener("click", () => search(state.page + 1));
 
 // Mature toggle is remembered between visits
-$("mature").checked = localStorage.getItem("mature") === "1";
-$("mature").addEventListener("change", () => { localStorage.setItem("mature", $("mature").checked ? "1" : "0"); renderAlways(); });
+$("mature").value = ["0", "1", "all"].includes(localStorage.getItem("mature")) ? localStorage.getItem("mature") : "0";
+$("mature").addEventListener("change", () => { localStorage.setItem("mature", $("mature").value); renderAlways(); });
 
 // ---------------------------------------------------------------- preferences
 function renderPrefs() {

@@ -4,6 +4,7 @@ from __future__ import annotations
 from itertools import combinations
 
 from parsing.model import Criterion, ParseResult
+from vndb.tags import BLOCKED_TAGS
 
 VN_FIELDS = ", ".join([
     "id", "title", "alttitle", "released", "rating", "votecount", "length",
@@ -88,6 +89,9 @@ def content_in_query(crits: list[Criterion]) -> bool:
     return False
 
 
+BLOCK_FILTERS = [["tag", "!=", [t, 2, 0.0]] for t in sorted(BLOCKED_TAGS)]   # in every search, always
+
+
 def mature_filter(mature: bool, cfg: dict) -> list:
     """Mature on: only VNs tagged Sexual Content (or any child tag).
     Off: none of them, at any spoiler level and any vote strength."""
@@ -100,9 +104,10 @@ def build_filters(res: ParseResult | list[Criterion], cfg: dict, mode: str = "al
                   mature: bool | None = None):
     """mode 'all': every criterion must hold.
     mode 'any': positive tag criteria are OR'ed (re-rank locally); the rest still AND.
-    mature: True/False adds the Mature filter (unless the query sets a content level)."""
+    mature: True/False adds the Mature filter (unless the query sets a content level);
+    "all" (Everything) and None add none."""
     crits = res.criteria if isinstance(res, ParseResult) else res
-    extra = [mature_filter(mature, cfg)] if mature is not None and not content_in_query(crits) else []
+    extra = BLOCK_FILTERS + ([mature_filter(mature, cfg)] if mature in (True, False) and not content_in_query(crits) else [])
     moods = [c for c in crits if c.soft and not c.exclude]
     if moods and not any(c.kind in ("tag", "tag_any") and not (c.exclude or c.soft) for c in crits):
         # only mood words ("something dark and cute"): any one of their tags, else nothing narrows

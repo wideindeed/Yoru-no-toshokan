@@ -233,7 +233,7 @@ async function parseAndSearch(text) {
     const p = await call(fn("parse"), text);
     const [criteria, likeNotes] = await expandLikes(p.criteria);
     Object.assign(state, { criteria, unmatched: p.unmatched, roles: p.unmatched_role || {},
-                           notes: [...likeNotes, ...p.notes], skip: [] });
+                           notes: [...likeNotes, ...p.notes], adult: p.adult || [], skip: [] });
     $("report").innerHTML = p.report.map((r) =>
       `<tr><td>${esc(r.phrase)}</td><td>${esc(r.method)}</td><td>${r.score.toFixed(0)}</td><td>${esc(r.got.join(", ") || "-")}</td></tr>`).join("");
     renderChips();
@@ -341,6 +341,11 @@ async function search(page) {
     $("status").textContent = [...notes, n ? `${n} shown${state.more ? ", more available" : ""}` : "Nothing found - try removing a label."].join(" ");
     if (state.notes.some((t) => t.startsWith("Adult")))   // the adult note: point to the desktop version
       $("status").insertAdjacentHTML("beforeend", ` <a href="${DESKTOP_URL}" target="_blank" rel="noopener">Adult titles: get the free desktop version ↗</a>`);
+    if (!isLN() && (state.criteria.length || state.adult?.length)) try {   // hand the whole search to VNDB
+      const f = await call("vndb_filters", JSON.stringify(state.criteria), JSON.stringify(state.adult || []), mode);
+      const { compact_filters: cf } = await vndb({ filters: f, results: 0, compact_filters: true });
+      if (cf) $("status").insertAdjacentHTML("beforeend", ` <a href="https://vndb.org/v?f=${encodeURIComponent(cf)}" target="_blank" rel="noopener">Open this search on VNDB ↗</a>`);
+    } catch { /* the link is optional */ }
     if (!n && mode === "all" && state.criteria.length > 1) $("status").insertAdjacentHTML("beforeend", TRY_ANY);
     $("more").hidden = !state.more;
     $("surprise").hidden = !n;
@@ -506,6 +511,7 @@ async function showVN(vid) {
     const data = await vndb({ filters: ["id", "=", vid], fields, results: 1 });
     if (!data.results?.length) { $("vn-body").innerHTML = `<p class="vn-status">No visual novel ${esc(vid)} on VNDB.</p>`; return; }
     const vn = await call("detail", JSON.stringify(data.results[0]));
+    if (!vn) { $("vn-body").innerHTML = `<p class="vn-status">${esc(vid)} isn't available here.</p>`; return; }
     document.title = `${vn.title} - Yoru no Toshokan`;
     $("vn-body").innerHTML = vnHtml(vn);
     bindViewer();

@@ -35,7 +35,8 @@ def test_adult_requests_are_dropped(web):
     p = json.loads(web.parse("explicit fantasy"))
     assert [c["display"] for c in p["criteria"]] == ["Fantasy"] and p["notes"]
     q = json.loads(web.query(json.dumps([{"kind": "tag", "value": "g23", "label": "Sexual Content"}]), "rating", "all", 1, "[]", "[]"))
-    assert q["filters"] == ["tag", "!=", ["g23", 2, 0.0]]
+    assert ["tag", "!=", ["g23", 2, 0.0]] in q["filters"]
+    assert json.loads(web.detail('{"id": "v1", "tags": [{"id": "g156"}]}')) is None
 
 
 def test_light_novels_stay_all_ages(web):

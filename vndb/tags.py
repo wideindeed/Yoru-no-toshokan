@@ -11,6 +11,12 @@ from settings import DATA_DIR, load_config
 TAGS_PATH = DATA_DIR / "tags.json"
 TAG_FIELDS = "name, aliases, category, searchable, applicable, vn_count, description"
 
+# Sexual content involving minors: never matched, listed, searched for or shown, in any
+# version. Searches always exclude these; titles carrying them don't open.
+BLOCKED_TAGS = frozenset({"g156", "g3159", "g2272",            # Lolicon, Straight / Lesbian Lolicon
+                          "g184", "g2046", "g2047", "g3123",   # Shotacon, Straight / Gay, Rape by Shota
+                          "g2023", "g1337"})                   # Sex Involving Children, Sexual Child Abuse
+
 
 @dataclass
 class Tag:
@@ -31,6 +37,7 @@ class TagIndex:
 
     @classmethod
     def build(cls, tags: list[Tag]) -> "TagIndex":
+        tags = [t for t in tags if t.id not in BLOCKED_TAGS]
         idx = cls({t.id: t for t in tags})
         for t in tags:
             for text in [t.name, *t.aliases]:

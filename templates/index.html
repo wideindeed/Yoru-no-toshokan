@@ -42,7 +42,8 @@
         <option value="any">any tag (ranked)</option>
       </select>
     </label>
-    <label title="Visual novels: on shows only games with sexual content (covers unblurred), off none of them. Light novels: on also includes adult novels."><input type="checkbox" id="mature"> Mature content</label>
+    <label title="Visual novels: All ages hides games with sexual content, Adult only shows only them, Everything shows both. Adult only and Everything show covers unblurred. Light novels: either adult setting also includes adult novels.">Content
+      <select id="mature"><option value="0">All ages</option><option value="1">Adult only</option><option value="all">Everything</option></select></label>
     <label title="Rewrite conversational text with the local Ollama model first">
       <input type="checkbox" id="llm" {% if use_llm %}checked{% endif %}> LLM rewrite</label>
   </div>
