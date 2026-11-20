@@ -1,0 +1,78 @@
+# Triages "Suggest a meaning" issues filed from the web app (web/app.js -> suggestMeaning).
+# The web app attaches a small proof-of-work stamp that binds the suggestion to its phrase
+# and the day; spam filed straight through the API carries no valid stamp. This checks the
+# stamp and structure, rate-caps per author, and auto-closes anything malformed or abusive.
+name: Triage suggestions
+on:
+  issues:
+    types: [opened, reopened]
+permissions:
+  issues: write
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const crypto = require("crypto");
+            const POW_BITS = 17, MAX_AGE_DAYS = 3, MAX_TOKEN = 60, MAX_BODY = 4000, AUTHOR_CAP = 8;
+            const repo = { owner: context.repo.owner, repo: context.repo.repo };
+            const issue = context.payload.issue, body = issue.body || "";
+
+            // only our suggestion issues: labelled by the app, or carrying our stamp marker
+            const labelled = (issue.labels || []).some((l) => (l.name || l) === "suggestion");
+            if (!labelled && !/yoru-stamp:/.test(body)) return;
+
+            const section = (h) => {
+              const m = body.match(new RegExp("###\\s*" + h + "\\s*\\n+([^#]*)", "i"));
+              return m ? m[1].trim() : "";
+            };
+            const token = section("Unmatched phrase").split("\n")[0].trim();
+            const zeros = (hex) => { let b = 0; for (const c of hex) { const n = parseInt(c, 16); if (n) { b += Math.clz32(n) - 28; break; } b += 4; } return b; };
+
+            let reason = "";
+            if (body.length > MAX_BODY) reason = "the report is unusually long";
+            else if (!token) reason = "no unmatched phrase was given";
+            else if (token.length > MAX_TOKEN) reason = "the phrase is too long";
+            else if (/https?:\/\//i.test(token)) reason = "the phrase contains a link";
+
+            // verify the proof-of-work stamp (same scheme as web/app.js)
+            let verified = false;
+            const stamp = body.match(/yoru-stamp:(\d{4}-\d{2}-\d{2}):(\d+)/);
+            if (!reason && stamp) {
+              const [, date, nonce] = stamp;
+              const ageDays = (Date.now() - Date.parse(date)) / 864e5;
+              const hex = crypto.createHash("sha256").update(`yoru1:${date}:${token}:${nonce}`).digest("hex");
+              verified = ageDays >= -1 && ageDays <= MAX_AGE_DAYS && zeros(hex) >= POW_BITS;
+            }
+
+            // per-author rate cap over the last day
+            const since = new Date(Date.now() - 864e5).toISOString();
+            const recent = await github.rest.search.issuesAndPullRequests({
+              q: `repo:${repo.owner}/${repo.repo} is:issue label:suggestion author:${issue.user.login} created:>${since}`,
+            }).catch(() => ({ data: { total_count: 0 } }));
+            const overCap = recent.data.total_count > AUTHOR_CAP;
+
+            const ensureLabel = async (name, color) => {
+              try { await github.rest.issues.getLabel({ ...repo, name }); }
+              catch { await github.rest.issues.createLabel({ ...repo, name, color }).catch(() => {}); }
+            };
+            const label = async (name, color) => {
+              await ensureLabel(name, color);
+              await github.rest.issues.addLabels({ ...repo, issue_number: issue.number, labels: [name] }).catch(() => {});
+            };
+            const close = async (name, color, msg) => {
+              await label(name, color);
+              await github.rest.issues.createComment({ ...repo, issue_number: issue.number, body: msg });
+              await github.rest.issues.update({ ...repo, issue_number: issue.number, state: "closed" });
+            };
+
+            if (reason)
+              return close("invalid", "b60205",
+                `Thanks, but this was auto-closed because ${reason}. If it's a genuine suggestion, reopen it with the phrase on its own line under **Unmatched phrase**.`);
+            if (overCap)
+              return close("rate-limited", "fbca04",
+                "Auto-closed: a lot of suggestions came from this account in a short time. Please space them out - thank you!");
+            await label("suggestion", "0e8a16");
+            await label(verified ? "verified" : "needs-review", verified ? "1d76db" : "d4c5f9");

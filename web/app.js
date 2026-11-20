@@ -248,7 +248,9 @@ function renderChips() {
   const good = state.criteria.map((c, i) =>
     `<span class="chip ${c.exclude ? "neg" : ""}" title="${esc(c.method)} from '${esc(c.phrase)}'">${esc(c.display)}<button data-i="${i}" aria-label="Remove ${esc(c.display)}">×</button></span>`);
   const bad = state.unmatched.map((u, i) =>
-    `<span class="chip bad"><button class="find" data-find="${i}" title="not understood - click to look it up in Browse tags">${esc(u)}</button><button data-u="${i}" aria-label="Remove ${esc(u)}">×</button></span>`);
+    `<span class="chip bad"><button class="find" data-find="${i}" title="not understood - click to look it up in Browse tags">${esc(u)}</button>` +
+    `<button class="suggest" data-suggest="${i}" title="Suggest what '${esc(u)}' should mean" aria-label="Suggest a meaning for ${esc(u)}">?</button>` +
+    `<button data-u="${i}" aria-label="Remove ${esc(u)}">×</button></span>`);
   $("chips").innerHTML = good.concat(bad).join("") || "<em>nothing</em>";
   renderAlways();
 }
@@ -275,10 +277,113 @@ $("chips").addEventListener("click", (e) => {
     tags.open(lookingUp);
     return;
   }
+  if (b?.dataset.suggest !== undefined) { suggestMeaning(+b.dataset.suggest); return; }
   if (!b) return;
   if (b.dataset.i !== undefined) { state.criteria.splice(+b.dataset.i, 1); renderChips(); search(1); }
   else { state.unmatched.splice(+b.dataset.u, 1); renderChips(); }
 });
+
+// ---------------------------------------------------- "Suggest a meaning"
+// A prefilled GitHub issue, gated so the feature can't be turned into a spam
+// firehose. The real gate is that GitHub needs a logged-in account; on top of
+// that we validate the token, rate-limit per browser, and attach a small
+// proof-of-work that binds the suggestion to its phrase and the day. Spam filed
+// straight through the issues API (skipping this page) carries no valid stamp,
+// so the triage Action (.github/workflows/triage-suggestions.yml) auto-rejects it.
+const REPO = "wideindeed/Yoru-no-toshokan";
+const SUG = { cooldownMs: 30000, dayCap: 10, maxToken: 60, maxQuery: 140, powBits: 17, powMs: 5000, maxNonce: 8e6 };
+
+// compact synchronous SHA-256 (public domain), so the proof-of-work loop is fast
+function sha256hex(msg) {
+  const K = sha256hex.K || (sha256hex.K = (() => {
+    const p = [], k = []; let n = 2;
+    for (let i = 0; i < 64;) {
+      let prime = 1; for (let f = 2; f * f <= n; f++) if (n % f === 0) { prime = 0; break; }
+      if (prime) { p.push(n); k.push(Math.floor((n ** (1 / 3) % 1) * 2 ** 32) | 0); i++; } n++;
+    }
+    sha256hex.H0 = p.slice(0, 8).map((x) => Math.floor((x ** 0.5 % 1) * 2 ** 32) | 0);
+    return k;
+  })());
+  const H = sha256hex.H0.slice();
+  const bytes = new TextEncoder().encode(msg), bitLen = bytes.length * 8;
+  const withOne = bytes.length + 1, blocks = Math.ceil((withOne + 8) / 64);
+  const buf = new Uint8Array(blocks * 64); buf.set(bytes); buf[bytes.length] = 0x80;
+  new DataView(buf.buffer).setUint32(buf.length - 4, bitLen);
+  const rr = (x, n) => (x >>> n) | (x << (32 - n));
+  const w = new Uint32Array(64), dv = new DataView(buf.buffer);
+  for (let b = 0; b < blocks; b++) {
+    for (let i = 0; i < 16; i++) w[i] = dv.getUint32(b * 64 + i * 4);
+    for (let i = 16; i < 64; i++) {
+      const s0 = rr(w[i - 15], 7) ^ rr(w[i - 15], 18) ^ (w[i - 15] >>> 3);
+      const s1 = rr(w[i - 2], 17) ^ rr(w[i - 2], 19) ^ (w[i - 2] >>> 10);
+      w[i] = (w[i - 16] + s0 + w[i - 7] + s1) | 0;
+    }
+    let [a, bb, c, d, e, f, g, h] = H;
+    for (let i = 0; i < 64; i++) {
+      const S1 = rr(e, 6) ^ rr(e, 11) ^ rr(e, 25), ch = (e & f) ^ (~e & g);
+      const t1 = (h + S1 + ch + K[i] + w[i]) | 0;
+      const S0 = rr(a, 2) ^ rr(a, 13) ^ rr(a, 22), maj = (a & bb) ^ (a & c) ^ (bb & c);
+      const t2 = (S0 + maj) | 0;
+      h = g; g = f; f = e; e = (d + t1) | 0; d = c; c = bb; bb = a; a = (t1 + t2) | 0;
+    }
+    const v = [a, bb, c, d, e, f, g, h]; for (let i = 0; i < 8; i++) H[i] = (H[i] + v[i]) | 0;
+  }
+  return H.map((x) => (x >>> 0).toString(16).padStart(8, "0")).join("");
+}
+
+function leadingZeroBits(hex) {
+  let bits = 0;
+  for (const ch of hex) { const n = parseInt(ch, 16); if (n) { bits += Math.clz32(n) - 28; break; } bits += 4; }
+  return bits;
+}
+// find a nonce so SHA-256("yoru1:<date>:<token>:<nonce>") has >= powBits leading zeros;
+// chunked so the page never freezes, and time-capped so the wait stays bounded
+async function powStamp(token, date) {
+  const deadline = Date.now() + SUG.powMs;
+  for (let nonce = 0; nonce < SUG.maxNonce; nonce++) {
+    if (leadingZeroBits(sha256hex(`yoru1:${date}:${token}:${nonce}`)) >= SUG.powBits)
+      return `${date}:${nonce}`;
+    if ((nonce & 8191) === 0 && nonce) {
+      if (Date.now() > deadline) return "";       // the issue still files; triage just won't fast-path it
+      await new Promise((r) => setTimeout(r, 0));  // yield so the UI stays responsive
+    }
+  }
+  return "";
+}
+
+function sugGate() {
+  let s; try { s = JSON.parse(localStorage.getItem("suggest") || "{}"); } catch { s = {}; }
+  const today = new Date().toISOString().slice(0, 10);
+  if (s.day !== today) { s.day = today; s.count = 0; }
+  if (Date.now() - (s.last || 0) < SUG.cooldownMs) return { msg: "Please wait a moment before suggesting again." };
+  if ((s.count || 0) >= SUG.dayCap) return { msg: "That's plenty of suggestions for today - thank you!" };
+  return { ok: true, s };
+}
+const sugClean = (v, max) => String(v || "").replace(/[\u0000-\u001f`]/g, " ").trim().slice(0, max);
+
+async function suggestMeaning(i) {
+  const token = sugClean(state.unmatched[i], SUG.maxToken);   // only a real, current token
+  if (state.unmatched[i] === undefined || !token) return;
+  const gate = sugGate();
+  if (!gate.ok) { $("status").textContent = gate.msg; return; }
+  $("status").textContent = "Preparing your suggestion...";
+  const date = new Date().toISOString().slice(0, 10);
+  const stamp = await powStamp(token, date);
+  gate.s.last = Date.now(); gate.s.count = (gate.s.count || 0) + 1;
+  try { localStorage.setItem("suggest", JSON.stringify(gate.s)); } catch {}
+  const query = sugClean($("q").value, SUG.maxQuery), src = isLN() ? "light novels" : "visual novels";
+  const title = `Meaning: "${token}"`;
+  const body = [
+    "<!-- Thanks for helping Yoru understand more searches. Please keep the headings. -->",
+    "", "### Unmatched phrase", token,
+    "", "### What should it match?", "_A VNDB tag name, or a short description in your own words._",
+    "", "### From this search (optional)", query ? "`" + query + "` (" + src + ")" : "_n/a_",
+    "", `<!-- yoru-stamp:${stamp} -->`,
+  ].join("\n");
+  const url = `https://github.com/${REPO}/issues/new?labels=suggestion&title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}`;
+  window.open(url, "_blank", "noopener");
+  $("status").textContent = "Opened a suggestion on GitHub in a new tab - thank you!";
+}
 
 // ---------------------------------------------------------------- tag browser
 let lookingUp = null;           // an unmatched phrase being looked up; replaced by the tag picked

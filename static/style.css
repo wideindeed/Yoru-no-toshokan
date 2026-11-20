@@ -143,6 +143,9 @@ select {
 .chip button:hover { background: none; color: var(--paper); }
 .chip button.find { min-width: 0; padding: 0; color: inherit; font-size: inherit; }   /* the words of a "not understood" chip */
 .chip button.find:hover { text-decoration: underline; }
+.chip button.suggest { min-width: 18px; min-height: 18px; margin-left: 4px; padding: 0 3px;   /* "suggest a meaning" */
+  border: 1px solid var(--lantern); border-radius: 50%; color: var(--lantern); font-size: 11px; line-height: 1; opacity: .75; }
+.chip button.suggest:hover { opacity: 1; background: var(--lantern); color: #1a1410; }
 #explain { margin-top: 6px; }
 #explain summary { cursor: pointer; width: max-content; }
 #report { margin-top: 6px; border-collapse: collapse; }
