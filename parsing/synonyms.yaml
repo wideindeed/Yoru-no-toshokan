@@ -311,6 +311,16 @@ phrases:
   yokai:                    { tag: "Youkai" }
   my sister:                { tag: "Protagonist's Sister as a Heroine" }
   sister heroine:           { tag: "Protagonist's Sister as a Heroine" }
+  little sister:            { tag: "Imouto-type Heroine" }
+  little sister heroine:    { tag: "Imouto-type Heroine" }
+  younger sister:           { tag: "Imouto-type Heroine" }
+  imouto:                   { tag: "Imouto-type Heroine" }
+  older sister:             { tag: "Oneesan-type Heroine" }
+  older sister heroine:     { tag: "Oneesan-type Heroine" }
+  big sister:               { tag: "Oneesan-type Heroine" }
+  big sister heroine:       { tag: "Oneesan-type Heroine" }
+  onee-san:                 { tag: "Oneesan-type Heroine" }
+  oneesan:                  { tag: "Oneesan-type Heroine" }
   battles:                  { tag: "Combat", ln: "Action" }
   battle:                   { tag: "Combat", ln: "Action" }
   transgender:              { tag: "Transgender Characters" }
@@ -519,6 +529,19 @@ traits:
   quiet: shy
   introverted: shy
   introvert: shy
+  socially awkward: shy
+  awkward: shy
+  reserved: shy
+  bashful: shy
+  withdrawn: shy
+  loner: hikikomori
+  shut-in: hikikomori
+  shut in: hikikomori
+  recluse: hikikomori
+  reclusive: hikikomori
+  hermit: hikikomori
+  antisocial: hikikomori
+  klutz: clumsy
   cold: kuudere
   stoic: emotionless
   expressionless: emotionless
