@@ -65,6 +65,8 @@ def criterion_filter(c: Criterion, cfg: dict):
         return ["release", "!=" if ex else "=", rel]
     if c.kind == "id":
         return ["id", "!=" if ex else "=", c.value]
+    if c.kind == "developer":   # VNDB resolves the producer name itself
+        return ["developer", "!=" if ex else "=", ["search", "=", str(c.value)[:200]]]
     if c.kind == "like":    # expanded into tags before searching; never a filter itself
         return None
     if c.kind == "title":   # VNDB's own title search (titles, aliases, release titles)

@@ -36,6 +36,16 @@ def test_example_query(parser):
     assert r.unmatched == []
 
 
+def test_creator_search(parser):
+    r = parser.parse("fantasy games by Key")
+    assert [c.value for c in crit(r, "developer")] == ["Key"]
+    assert tag_ids(r) == {"g2"}                          # Fantasy still parsed alongside
+    # idioms and tags after "by" are not producer names
+    assert crit(parser.parse("made by hand"), "developer") == []
+    assert crit(parser.parse("a game set by the sea"), "developer") == []
+    assert crit(parser.parse("side by side romance"), "developer") == []
+
+
 def test_short_no_horror_android_after_2018(parser):
     r = parser.parse("short, no horror, android, after 2018")
     assert crit(r, "length")[0].value == 2

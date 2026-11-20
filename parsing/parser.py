@@ -42,6 +42,20 @@ _LIKE_RE = re.compile(
     r"|fans?\s+of)\s+(?P<t>.+?)"
     r"(?=\s*(?:[,.!?]|;\s|$|\s+(?:but|with|without|that|which|where|who|because|cuz|since|so|lol|lmao|pls|please"
     r"|and\s+(?:no|not|with|without|also|in|on))\b))", re.I)
+#  "games by Key", "developed by NTRMan", "from the studio Nitroplus": the producer name
+#  runs to the end of its clause. Bare "by" is left out on purpose ("side by side").
+_CLAUSE_END = (r"(?=\s*(?:[,.!?]|;\s|$|\s+(?:but|with|without|that|which|where|who|because|cuz|since|so"
+               r"|and\s+(?:no|not|with|without|also|in|on))\b))")
+_CREATOR_RE = re.compile(
+    r"(?<![\w'])(?:"
+    r"(?:games?|vns?|visual\s+novels?|titles?|stuff|works|ones?|something|anything)\s+(?:made\s+|developed\s+|created\s+)?by"
+    r"|(?:developed|made|created|produced|published|written)\s+by"
+    r"|from\s+(?:the\s+)?(?:studio|developer|company|publisher)"
+    r")\s+(?P<n>.+?)" + _CLAUSE_END, re.I)
+_ARTICLES = ("a", "an", "the", "his", "her", "my", "your", "their", "some", "any")
+# "made by hand", "by myself", "by accident": idioms, not producer names
+_NOT_NAMES = {"hand", "myself", "yourself", "himself", "herself", "accident", "mistake",
+              "default", "chance", "necessity", "heart", "now", "then", "far", "choice"}
 
 
 class QueryParser:
@@ -62,6 +76,7 @@ class QueryParser:
 
     def parse(self, text: str) -> ParseResult:
         res = ParseResult(text)
+        text = self._creators(text, res)
         text = self._likes(text, res)
         if self._not_too_mood:
             text = self._not_too_mood.sub(r"\1 \2,", text)
@@ -90,6 +105,21 @@ class QueryParser:
                 res.report.append(PhraseReport(c.phrase, [c], "like", 100.0))
             return ", "
         return _LIKE_RE.sub(one, text)
+
+    def _creators(self, text: str, res: ParseResult) -> str:
+        """Pull out "games by <producer>" clauses; VNDB resolves the name when searching.
+        A name that is really a tag ("made by hand") or an article ("by the sea") is left alone."""
+        def one(m: re.Match) -> str:
+            name = m["n"].strip(" '\"")
+            if (not name or len(name.split()) > 6 or self.matcher.lookup_exact(name)
+                    or rules.is_empty_leftover(name) or name.split()[0].lower() in _ARTICLES
+                    or name.lower() in _NOT_NAMES):
+                return m[0]
+            c = Criterion("developer", name, f"By {name}", phrase=m[0].strip(), method="developer")
+            if res.add(c):
+                res.report.append(PhraseReport(c.phrase, [c], "developer", 100.0))
+            return ", "
+        return _CREATOR_RE.sub(one, text)
 
     def _role_in(self, phrase: str) -> str | None:
         """The last person a clause names: "a girl" -> heroine, "the MC" -> protagonist."""
