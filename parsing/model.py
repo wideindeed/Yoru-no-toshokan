@@ -19,8 +19,9 @@ from typing import Any
 #   id         str VN/LN id (used as an exclusion: "not this one")
 #   like       str title to look up; replaced by that title's tags before searching
 #   developer  str producer name; VNDB searches its developers ("by Key", "games by X")
+#   staff      str person name; VNDB searches credited staff ("written by X", "art by X")
 KINDS = {"tag", "tag_any", "lang", "platform", "engine", "length",
-         "released", "rating", "votecount", "title", "tl", "id", "like", "developer"}
+         "released", "rating", "votecount", "title", "tl", "id", "like", "developer", "staff"}
 
 
 @dataclass

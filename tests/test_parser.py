@@ -46,6 +46,26 @@ def test_creator_search(parser):
     assert crit(parser.parse("side by side romance"), "developer") == []
 
 
+def test_staff_search(parser):
+    r = parser.parse("fantasy game written by Romeo Tanaka")
+    assert [c.value for c in crit(r, "staff")] == ["Romeo Tanaka"]
+    assert crit(r, "developer") == []                    # a credit, not a producer
+    assert [c.value for c in crit(parser.parse("music by Jun Maeda"), "staff")] == ["Jun Maeda"]
+
+
+def test_compound_description_keeps_role(parser):
+    # "a female character ... is short, flat chest, socially awkward": the person carries
+    r = parser.parse("a female character that is short, flat chest, socially awkward")
+    assert "g3437" in tag_ids(r)                          # Heroine with Flat Chest (Non-Loli)
+    assert not crit(r, "length")                          # "short" is height here, not VN length
+
+
+def test_typo_of_filler_is_dropped(parser):
+    r = parser.parse("fantasy settomg")
+    assert tag_ids(r) == {"g2"}
+    assert r.unmatched == []                              # "settomg" is a typo of "setting"
+
+
 def test_short_no_horror_android_after_2018(parser):
     r = parser.parse("short, no horror, android, after 2018")
     assert crit(r, "length")[0].value == 2

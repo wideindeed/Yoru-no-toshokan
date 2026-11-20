@@ -49,8 +49,16 @@ _CLAUSE_END = (r"(?=\s*(?:[,.!?]|;\s|$|\s+(?:but|with|without|that|which|where|w
 _CREATOR_RE = re.compile(
     r"(?<![\w'])(?:"
     r"(?:games?|vns?|visual\s+novels?|titles?|stuff|works|ones?|something|anything)\s+(?:made\s+|developed\s+|created\s+)?by"
-    r"|(?:developed|made|created|produced|published|written)\s+by"
+    r"|(?:developed|made|created|produced|published)\s+by"
     r"|from\s+(?:the\s+)?(?:studio|developer|company|publisher)"
+    r")\s+(?P<n>.+?)" + _CLAUSE_END, re.I)
+#  "written by Romeo Tanaka", "art by X", "music by X": a person who worked on the VN (VNDB staff).
+#  Checked before _CREATOR_RE so "written by" is a staff credit, not a producer.
+_STAFF_RE = re.compile(
+    r"(?<![\w'])(?:"
+    r"(?:written|writing|scenario|story|art(?:work)?|drawn|illustrated|illustrations?|character\s+design(?:s)?"
+    r"|music|soundtrack|composed|directed)\s+by"
+    r"|by\s+the\s+(?:writer|author|artist|composer|director|illustrator)"
     r")\s+(?P<n>.+?)" + _CLAUSE_END, re.I)
 _ARTICLES = ("a", "an", "the", "his", "her", "my", "your", "their", "some", "any")
 # "made by hand", "by myself", "by accident": idioms, not producer names
@@ -76,7 +84,8 @@ class QueryParser:
 
     def parse(self, text: str) -> ParseResult:
         res = ParseResult(text)
-        text = self._creators(text, res)
+        text = self._people(text, res, _STAFF_RE, "staff", "Staff: ")
+        text = self._people(text, res, _CREATOR_RE, "developer", "By ")
         text = self._likes(text, res)
         if self._not_too_mood:
             text = self._not_too_mood.sub(r"\1 \2,", text)
@@ -106,20 +115,21 @@ class QueryParser:
             return ", "
         return _LIKE_RE.sub(one, text)
 
-    def _creators(self, text: str, res: ParseResult) -> str:
-        """Pull out "games by <producer>" clauses; VNDB resolves the name when searching.
-        A name that is really a tag ("made by hand") or an article ("by the sea") is left alone."""
+    def _people(self, text: str, res: ParseResult, rx: re.Pattern, kind: str, prefix: str) -> str:
+        """Pull out "games by <producer>" / "written by <person>" clauses; VNDB resolves the
+        name when searching. A name that is really a tag ("made by hand") or an article
+        ("by the sea") is left alone."""
         def one(m: re.Match) -> str:
             name = m["n"].strip(" '\"")
             if (not name or len(name.split()) > 6 or self.matcher.lookup_exact(name)
                     or rules.is_empty_leftover(name) or name.split()[0].lower() in _ARTICLES
                     or name.lower() in _NOT_NAMES):
                 return m[0]
-            c = Criterion("developer", name, f"By {name}", phrase=m[0].strip(), method="developer")
+            c = Criterion(kind, name, f"{prefix}{name}", phrase=m[0].strip(), method=kind)
             if res.add(c):
-                res.report.append(PhraseReport(c.phrase, [c], "developer", 100.0))
+                res.report.append(PhraseReport(c.phrase, [c], kind, 100.0))
             return ", "
-        return _CREATOR_RE.sub(one, text)
+        return rx.sub(one, text)
 
     def _role_in(self, phrase: str) -> str | None:
         """The last person a clause names: "a girl" -> heroine, "the MC" -> protagonist."""
@@ -130,6 +140,9 @@ class QueryParser:
         low = re.sub(r"\bmultiple (?:protagonists|heroines|heroes)\b", "", low)   # a story structure, not a person
         hits = [(m.start(), ROLE_OF[m.group()]) for m in re.finditer(r"[a-z]+", low) if m.group() in ROLE_OF]
         hits += [(m.start(), "protagonist") for m in re.finditer(r"main characters?|lead character", low)]
+        # a gender adjective ("female character", "male lead") names a person too
+        hits += [(m.start(), "heroine" if m.group() == "female" else "hero")
+                 for m in re.finditer(r"\b(?:female|male)\b", low)]
         return max(hits)[1] if hits else None
 
     # ------------------------------------------------------------------
@@ -228,7 +241,8 @@ class QueryParser:
 
     def _leftover(self, words: list[str], exclude: bool, phrase: str, res: ParseResult, acc: "_Acc") -> None:
         """Last resort for unplaced words: optional embedding match, else report them."""
-        words = [w for w in words if w not in ROLE_OF]     # "a girl": who, not what
+        words = [w for w in words if w not in ROLE_OF            # "a girl": who, not what
+                 and not rules.is_typo_filler(w)]               # "settomg": a typo of "setting", not a concept
         if not words:
             return
         text = " ".join(words)

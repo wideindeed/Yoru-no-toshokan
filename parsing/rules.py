@@ -140,6 +140,32 @@ def is_stop(token: str) -> bool:
     return token in STOPWORDS or singular(token) in STOPWORDS
 
 
+def _lev(a: str, b: str, cap: int = 3) -> int:
+    """Bounded Levenshtein distance (pure Python, runs in Pyodide)."""
+    if abs(len(a) - len(b)) > cap:
+        return cap + 1
+    prev = list(range(len(b) + 1))
+    for i, ca in enumerate(a, 1):
+        cur = [i]
+        for j, cb in enumerate(b, 1):
+            cur.append(min(prev[j] + 1, cur[-1] + 1, prev[j - 1] + (ca != cb)))
+        prev = cur
+    return prev[-1]
+
+
+# Structure words that carry no tag meaning; a close typo of one is noise, not a missed concept.
+_TYPO_FILLER = {w for w in FILLER if w.isalpha() and len(w) >= 4} | {
+    "setting", "settings", "theme", "themes", "story", "stories", "plot", "world", "character"}
+
+
+def is_typo_filler(word: str) -> bool:
+    """A single word that is a near-typo of a structure word ("settomg" -> "setting")."""
+    w = word.lower()
+    if not w.isalpha() or len(w) < 5 or is_stop(w):
+        return False
+    return any(_lev(w, f, 2) <= 2 for f in _TYPO_FILLER if abs(len(f) - len(w)) <= 2)
+
+
 #  "not just a power fantasy", "isn't only h scenes": a hedge, neither wanted nor excluded
 _NOT_JUST_RE = re.compile(r"(?<![\w'])(?:not|isn'?t|aren'?t|wasn'?t)\s+(?:just|only|merely|simply|purely)\b.*$", re.I)
 
