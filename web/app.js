@@ -238,8 +238,32 @@ async function parseAndSearch(text) {
       `<tr><td>${esc(r.phrase)}</td><td>${esc(r.method)}</td><td>${r.score.toFixed(0)}</td><td>${esc(r.got.join(", ") || "-")}</td></tr>`).join("");
     renderChips();
     await search(1);
+    suggestClose();        // background: offer the closest tag for anything left unmatched
   } catch (e) {
     $("status").textContent = "Error: " + e.message;
+  }
+}
+
+// An automatic "did you mean" for unmatched phrases: the in-browser MiniLM (related.js)
+// finds the tag closest in meaning. Runs in the background after results show, and only
+// when confident (>= AUTO_MIN), so it stays quiet on typos and gibberish. The model
+// (~23 MB) loads lazily on the first unmatched phrase, then the browser caches it.
+const AUTO_MIN = 0.55;             // confidence bar; raise to suggest less, lower to suggest more
+                                   // (calibrated: clear hits score 0.65-0.82, conversational noise <= 0.52)
+const closeCache = {};             // "src:phrase" -> closest tag hit, or null when nothing fit
+const closeKey = (u) => `${state.source}:${u}`;
+
+async function suggestClose() {
+  if (typeof relatedTags !== "function") return;
+  for (const u of [...state.unmatched]) {
+    if (closeKey(u) in closeCache) continue;
+    closeCache[closeKey(u)] = null;          // mark in-flight so a later search won't re-run it
+    try {
+      const hit = (await relatedTags(u, { base: "vectors/", src: state.source, ero: false,
+                                          role: state.roles?.[u], k: 1, min: AUTO_MIN }))[0];
+      if (hit) closeCache[closeKey(u)] = hit;
+    } catch { /* model or vectors failed to load; just no suggestion */ }
+    if (state.unmatched.includes(u)) renderChips();   // reveal each suggestion as it resolves
   }
 }
 
@@ -247,10 +271,16 @@ function renderChips() {
   $("understood").hidden = false;
   const good = state.criteria.map((c, i) =>
     `<span class="chip ${c.exclude ? "neg" : ""}" title="${esc(c.method)} from '${esc(c.phrase)}'">${esc(c.display)}<button data-i="${i}" aria-label="Remove ${esc(c.display)}">×</button></span>`);
-  const bad = state.unmatched.map((u, i) =>
-    `<span class="chip bad"><button class="find" data-find="${i}" title="not understood - click to look it up in Browse tags">${esc(u)}</button>` +
-    `<button class="suggest" data-suggest="${i}" title="Suggest what '${esc(u)}' should mean" aria-label="Suggest a meaning for ${esc(u)}">?</button>` +
-    `<button data-u="${i}" aria-label="Remove ${esc(u)}">×</button></span>`);
+  const bad = state.unmatched.map((u, i) => {
+    const hit = closeCache[closeKey(u)];
+    const dym = hit
+      ? `<button class="accept" data-accept="${i}" title="Add the tag '${esc(hit.name)}' (close in meaning)">→ ${esc(hit.name)}?</button>`
+      : "";
+    return `<span class="chip bad"><button class="find" data-find="${i}" title="not understood - click to look it up in Browse tags">${esc(u)}</button>` +
+      dym +
+      `<button class="suggest" data-suggest="${i}" title="Suggest what '${esc(u)}' should mean" aria-label="Suggest a meaning for ${esc(u)}">?</button>` +
+      `<button data-u="${i}" aria-label="Remove ${esc(u)}">×</button></span>`;
+  });
   $("chips").innerHTML = good.concat(bad).join("") || "<em>nothing</em>";
   renderAlways();
 }
@@ -278,6 +308,18 @@ $("chips").addEventListener("click", (e) => {
     return;
   }
   if (b?.dataset.suggest !== undefined) { suggestMeaning(+b.dataset.suggest); return; }
+  if (b?.dataset.accept !== undefined) {   // accept the MiniLM "did you mean" as a tag
+    const i = +b.dataset.accept, u = state.unmatched[i], hit = u !== undefined && closeCache[closeKey(u)];
+    if (hit) {
+      state.criteria = state.criteria.filter((c) => !(c.kind === "tag" && c.value === hit.id));
+      state.criteria.push({ kind: "tag", value: hit.id, label: hit.name, exclude: false,
+                            phrase: u, method: "close in meaning", display: hit.name });
+      state.unmatched.splice(i, 1);
+      renderChips();
+      search(1);
+    }
+    return;
+  }
   if (!b) return;
   if (b.dataset.i !== undefined) { state.criteria.splice(+b.dataset.i, 1); renderChips(); search(1); }
   else { state.unmatched.splice(+b.dataset.u, 1); renderChips(); }
